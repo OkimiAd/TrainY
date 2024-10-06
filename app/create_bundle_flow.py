@@ -1,3 +1,6 @@
+import time
+from time import sleep
+
 from aiogram import types, Router, F
 from aiogram.enums import ContentType
 from aiogram.filters import CommandStart, Command
@@ -26,6 +29,7 @@ class Bundle(StatesGroup):
     company = State()
     date = State()
     direction = State()
+
 
 @router.message(F.text == 'Для авторов')
 async def for_authors(message: types.Message, state: FSMContext):
@@ -102,7 +106,7 @@ async def company_name_bundle(message: types.Message, state: FSMContext):
 async def date_bundle(message: types.Message, state: FSMContext):
     await state.update_data(date=message.text)
     await state.set_state(Bundle.direction)
-    await message.answer("Какое направление? BackEnd, FrontEnd и другие")
+    await message.answer("Какое направление? BackEnd, FrontEnd и другие", reply_markup=kb.directions)
 
 
 @router.message(Bundle.direction)
@@ -127,7 +131,13 @@ async def end_assembling(message: types.Message, state: FSMContext):
 
 @router.callback_query(F.data == "moderate")
 async def callback_query(callback: CallbackQuery, state: FSMContext):
+    if await state.get_state() != str(Bundle.direction.state):
+        print("canceled")
+        return
+
     data = await state.get_data()
+    await callback.message.answer(
+        'Ваш bundle успешно отправлен на модерацию. Когда он пройдет или не пройдет модерацию, вам будет направленно уведомление.')
 
     db.add_bundle(author_id=callback.from_user.id,
                   name=data["name"],
@@ -137,4 +147,6 @@ async def callback_query(callback: CallbackQuery, state: FSMContext):
                   direction=data["direction"],
                   assembly=data["assembly"],
                   )
+    time.sleep(2)
+    await on_start(callback.message, state)
     await state.clear()

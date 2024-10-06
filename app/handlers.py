@@ -1,3 +1,4 @@
+
 from aiogram import types, Router, F
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
@@ -15,6 +16,7 @@ router = Router()
 @router.message(CommandStart())
 async def on_start(message: types.Message, state: FSMContext):
     user = message.from_user
+
     await message.answer_sticker("CAACAgIAAxkBAAEM6o9m_xXrhAqbSSVi3qlJF-avCUEN0AACSB0AAuIkgEot-Nk2wyVajjYE")
 
     await message.answer("Привет " + user.first_name)

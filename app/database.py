@@ -48,8 +48,10 @@ def add_bundle(*, author_id: int, name: str, price: int, company: str, date_inte
 
 
 def add_bundle_for_user(*, user_id: int, bundle_id: int):
-    original_list: tuple = connection.execute(f'SELECT available_bundles FROM users WHERE id = {user_id}').fetchone()
-    y: list = json.loads(original_list[0])
+    original_list: str = connection.execute(f'SELECT available_bundles FROM users WHERE id = {user_id}').fetchone()[0]
+    if original_list == '"' :
+        original_list = "[]"
+    y: list = json.loads(original_list)
     y.append(int(bundle_id))
     jsonnn = json.dumps(y, default=obj_dict)
     connection.execute(f'UPDATE users SET available_bundles = "{jsonnn}" WHERE id = {user_id}')
@@ -84,7 +86,7 @@ class Bundle:
 
 
 def get_all_bundles():
-    bundless: list[tuple] = connection.execute("SELECT * FROM bundles").fetchmany(5)
+    bundless: list[tuple] = connection.execute("SELECT * FROM bundles  ORDER BY id DESC").fetchmany(5)
     new_listt = []
 
     for t in bundless:
