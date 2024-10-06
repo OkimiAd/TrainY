@@ -1,10 +1,10 @@
+import json
 
 from aiogram import types, Router, F
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
-from aiogram.types import CallbackQuery
 from aiogram.utils import markdown
 
 import app.database as db
@@ -12,6 +12,11 @@ import app.keyboards as kb
 
 router = Router()
 
+class DocumentMess:
+    doc_id: int
+
+    def __init__(self, f):
+        self.doc_id = f
 
 @router.message(CommandStart())
 async def on_start(message: types.Message, state: FSMContext):
@@ -62,40 +67,42 @@ async def on_FAQ(message: types.Message, state: FSMContext):
 
 
 class CatalogFlow(StatesGroup):
-    choose_id = State()
+    choose_id_buy = State()
+    choose_id_open = State()
 
-
-@router.message(F.text == 'Каталог интервью')
-async def on_catalog(message: types.Message, state: FSMContext):
+@router.message(Command('open_bundle'))
+async def open_bundle(message: types.Message, state: FSMContext):
     await state.clear()
-    list_bundles = db.get_all_bundles()
-    await message.answer("Для того что бы купить напиши id интересующего тебя bundle", protect_content=True)
-
-    await state.set_state(CatalogFlow.choose_id)
-
-    for item in list_bundles:
-        await message.answer(
-            f'id - {item.bundle_id}\n{item.name}\n{item.company}\n{item.direction}\n{item.date_interview}\n{item.price}₽')
+    await message.answer("Для того что бы открыть напиши id интересующего тебя bundle", protect_content=True)
+    await state.set_state(CatalogFlow.choose_id_open)
 
 
-@router.message(CatalogFlow.choose_id)
-async def date_bundle(message: types.Message, state: FSMContext):
-    db.add_bundle_for_user(user_id=message.from_user.id, bundle_id=int(message.text))
-    await state.clear()
-    await message.answer("Bundle успешно куплен. Теперь ты его можешь найти в разделе \"Доступные мне\"")
 
 
 @router.message(F.text == 'Доступные мне')
 async def on_catalog(message: types.Message, state: FSMContext):
     await state.clear()
+    await message.answer("Для того что бы открыть напиши /open_bundle", protect_content=True)
     list_bundles = db.get_available_bundles_for_user(user_id=message.from_user.id)
-    # await message.answer("Для того что бы купить напиши id интересующего тебя bundle", protect_content=True)
-
-    # await state.set_state(CatalogFlow.choose_id)
 
     for item in list_bundles:
         await message.answer(
             f'id - {item.bundle_id}\n{item.name}\n{item.company}\n{item.direction}\n{item.date_interview}\n{item.price}₽')
+
+
+@router.message(CatalogFlow.choose_id_open)
+async def date_bundle(message: types.Message, state: FSMContext):
+    have_access = db.user_have_bundle_access(message.from_user.id, int( message.text))
+    if not have_access:
+        await message.answer("У вас нет доступа к этому bundle. Сначала купите его в разделе \"Каталог интеревью\"")
+    else:
+        listt = db.get_bundle(bundle_id = message.text)
+        y: list = json.loads(listt)
+        for i in y:
+            if type(i) is dict:
+                await message.answer_document(i["doc_id"])
+            else:
+                await message.answer(i)
 
 
 @router.message()

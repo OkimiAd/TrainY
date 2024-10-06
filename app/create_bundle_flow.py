@@ -10,16 +10,12 @@ from aiogram.types import CallbackQuery
 
 import app.database as db
 import app.keyboards as kb
-from app.handlers import on_start
+from app.handlers import on_start, DocumentMess
 
 router = Router()
 
 
-class DocumentMess:
-    doc_id: int
 
-    def __init__(self, f):
-        self.doc_id = f
 
 
 class Bundle(StatesGroup):

@@ -47,9 +47,13 @@ def add_bundle(*, author_id: int, name: str, price: int, company: str, date_inte
     connection.commit()
 
 
+def get_bundle(*, bundle_id):
+    return cursor.execute(f'SELECT assembling FROM bundles WHERE id = {bundle_id}').fetchone()[0]
+
+
 def add_bundle_for_user(*, user_id: int, bundle_id: int):
     original_list: str = connection.execute(f'SELECT available_bundles FROM users WHERE id = {user_id}').fetchone()[0]
-    if original_list == '"' :
+    if original_list == '"':
         original_list = "[]"
     y: list = json.loads(original_list)
     y.append(int(bundle_id))
@@ -85,21 +89,38 @@ class Bundle:
         self.assembling = assembling
 
 
-def get_all_bundles():
-    bundless: list[tuple] = connection.execute("SELECT * FROM bundles  ORDER BY id DESC").fetchmany(5)
+def get_all_bundles(user_id: int):
+    bundles_json: str = connection.execute(f'SELECT available_bundles FROM users WHERE id = {user_id}').fetchone()[0]
+    s = bundles_json.replace('[', '(').replace(']', ')')
+    bundless: list[tuple] = connection.execute(
+        f'SELECT * FROM bundles WHERE id NOT IN {s} ORDER BY id DESC').fetchmany(5)
     new_listt = []
 
     for t in bundless:
         new_listt.append(Bundle(bundle_id=t[0], created_date=t[1], author_id=t[2], name=t[3], price=t[4], company=t[5],
                                 date_interview=t[6], direction=t[7], assembling=t[8]))
-
     return new_listt
+
+def user_have_bundle_access(user_id: int, bundle_id: int) ->  bool:
+    bundles_json: str = connection.execute(f'SELECT available_bundles FROM users WHERE id = {user_id}').fetchone()[0]
+    bundle_id_list: list = json.loads(bundles_json)
+    return bundle_id_list.__contains__(bundle_id)
+    # s = bundles_json.replace('[', '(').replace(']', ')')
+    # bundless: list[tuple] = connection.execute(
+    #     f'SELECT * FROM bundles WHERE id NOT IN {s} ORDER BY id DESC').fetchmany(5)
+    # new_listt = []
+    #
+    # for t in bundless:
+    #     new_listt.append(Bundle(bundle_id=t[0], created_date=t[1], author_id=t[2], name=t[3], price=t[4], company=t[5],
+    #                             date_interview=t[6], direction=t[7], assembling=t[8]))
+
+    # return new_listt
 
 
 def get_available_bundles_for_user(user_id: int):
     bundles_json: str = connection.execute(f'SELECT available_bundles FROM users WHERE id = {user_id}').fetchone()[0]
-    s = bundles_json.replace('[', '(').replace(']',')')
-    bundless: list[tuple] = connection.execute(f'SELECT * FROM bundles WHERE id IN {s}').fetchmany(5)
+    s = bundles_json.replace('[', '(').replace(']', ')')
+    bundless: list[tuple] = connection.execute(f'SELECT * FROM bundles WHERE id IN {s}').fetchmany(10)
     new_listt = []
 
     for t in bundless:
