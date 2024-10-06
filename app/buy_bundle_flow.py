@@ -57,6 +57,6 @@ async def buy_bundle(message: types.Message, state: FSMContext):
 
 @router.message(CatalogFlow.choose_id_buy)
 async def date_bundle(message: types.Message, state: FSMContext):
-    db.add_bundle_for_user(user_id=message.from_user.id, bundle_id=int(message.text))
+    db.buy_bundle(user_id=message.from_user.id, bundle_id=int(message.text))
     await state.clear()
     await message.answer("Bundle успешно куплен. Теперь ты его можешь найти в разделе \"Доступные мне\"")

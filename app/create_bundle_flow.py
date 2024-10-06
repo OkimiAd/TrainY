@@ -80,7 +80,6 @@ async def price_bundle(message: types.Message, state: FSMContext):
 
     await state.update_data(price=message.text)
 
-    await message.answer("Ценник обновлен")
     await message.answer("Введи название компании")
     await state.set_state(Bundle.company)
 
@@ -127,9 +126,9 @@ async def callback_query(callback: CallbackQuery, state: FSMContext):
 
     data = await state.get_data()
     await callback.message.answer(
-        'Ваш bundle успешно отправлен на модерацию. Когда он пройдет или не пройдет модерацию, вам будет направленно уведомление.')
+        'Ваш bundle успешно отправлен на модерацию. Когда он пройдет или не пройдет модерацию, вам будет направленно уведомление.', reply_markup=kb.main)
 
-    db.add_bundle(author_id=callback.from_user.id,
+    await db.create_bundle(author_id=callback.from_user.id,
                   name=data["name"],
                   price=data["price"],
                   company=data["company"],
@@ -138,5 +137,5 @@ async def callback_query(callback: CallbackQuery, state: FSMContext):
                   assembly=data["assembly"],
                   )
     time.sleep(2)
-    await on_start(callback.message, state)
+    # await on_start(callback.message, state)
     await state.clear()

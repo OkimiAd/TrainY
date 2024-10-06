@@ -1,5 +1,3 @@
-import json
-
 from aiogram import types, Router, F
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
@@ -12,18 +10,18 @@ import app.keyboards as kb
 
 router = Router()
 
+
 class DocumentMess:
     doc_id: int
 
     def __init__(self, f):
         self.doc_id = f
 
+
 @router.message(CommandStart())
 async def on_start(message: types.Message, state: FSMContext):
     user = message.from_user
-
     await message.answer_sticker("CAACAgIAAxkBAAEM6o9m_xXrhAqbSSVi3qlJF-avCUEN0AACSB0AAuIkgEot-Nk2wyVajjYE")
-
     await message.answer("Привет " + user.first_name)
     await message.answer(
         "Это бот TrainY! Тут ты можешь найти свежие записи собеседований в любую компанию на любую должность.\n"
@@ -72,42 +70,42 @@ class CatalogFlow(StatesGroup):
     filter_company = State()
     choose_id_open = State()
 
-@router.message(Command('open_bundle'))
-async def open_bundle(message: types.Message, state: FSMContext):
+
+@router.message(F.text == 'Подписка на поиск')
+async def subscribe_search(message: types.Message, state: FSMContext):
     await state.clear()
-    await message.answer("Для того что бы открыть напиши id интересующего тебя bundle", protect_content=True)
-    await state.set_state(CatalogFlow.choose_id_open)
+    await message.answer(
+        "Это раздел настройки подписки на поиск. Вы можете выбрать компанию и направление которое вас интересует и вы будете получать уведомление о поялвении новых записей сразу же как они появятся.",
+        protect_content=True, reply_markup=kb.subscribes)
 
-@router.message(F.text == 'Доступные мне')
-async def on_catalog(message: types.Message, state: FSMContext):
+
+@router.message(F.text == 'Добавить подписку')
+async def subscribe_search(message: types.Message, state: FSMContext):
     await state.clear()
+    await state.set_state(SubscribesFlow.add_sub_direction)
+    await message.answer(
+        "Какое направление программирования вас интересует",
+        protect_content=True, reply_markup=kb.directions)
 
-    list_bundles = db.get_available_bundles_for_user(user_id=message.from_user.id)
-
-    if len(list_bundles) == 0:
-        await message.answer("У вас нет доступных записей. Перейдите в каталог записей для того что бы приобрести еще.", protect_content=True,reply_markup=kb.main)
-        return
-    await message.answer("Для того что бы открыть напиши /open_bundle", protect_content=True)
-
-    for item in list_bundles:
-        await message.answer(
-            f'id - {item.bundle_id}\n{item.name}\n{item.company}\n{item.direction}\n{item.date_interview}\n{item.price}₽')
+class SubscribesFlow(StatesGroup):
+    add_sub_direction = State()
+    add_sub_company = State()
 
 
-@router.message(CatalogFlow.choose_id_open)
-async def date_bundle(message: types.Message, state: FSMContext):
-    have_access = db.user_have_bundle_access(message.from_user.id, int( message.text))
-    if not have_access:
-        await message.answer("У вас нет доступа к этому bundle. Сначала купите его в разделе \"Каталог интеревью\"")
-    else:
-        listt = db.get_bundle(bundle_id = message.text)
-        y: list = json.loads(listt)
-        for i in y:
-            if type(i) is dict:
-                await message.answer_document(i["doc_id"])
-            else:
-                await message.answer(i)
+@router.message(SubscribesFlow.add_sub_direction)
+async def filter_direction(message: types.Message, state: FSMContext):
+    await state.update_data(direction=message.text)
+    await state.set_state(SubscribesFlow.add_sub_company)
+    await message.answer("Какая компания вас интересует?(Англ)", protect_content=True)
 
+
+@router.message(SubscribesFlow.add_sub_company)
+async def filter_company(message: types.Message, state: FSMContext):
+    await state.update_data(company=message.text)
+    state_data = await state.get_data()
+    db.add_subscribe_search(user_id= message.from_user.id, direction=state_data["direction"], company=state_data["company"], chat_id = message.chat.id)
+    await message.answer("Подписка успешно добавлена", protect_content=True, reply_markup=kb.main)
+    await state.clear()
 
 @router.message()
 async def other(message: types.Message):
