@@ -1,9 +1,7 @@
 import time
-from time import sleep
 
 from aiogram import types, Router, F
 from aiogram.enums import ContentType
-from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery
@@ -13,10 +11,6 @@ import app.keyboards as kb
 from app.handlers import on_start, DocumentMess
 
 router = Router()
-
-
-
-
 
 class Bundle(StatesGroup):
     assembly = State()
@@ -50,7 +44,7 @@ async def assembly_bundle(message: types.Message, state: FSMContext):
     if message.text == '/commit':
         print('/commit')
         await message.answer("Бандл успешно собран")
-        await message.answer("Теперь введи название бандла")
+        await message.answer("Теперь введи название бандла(Англ)")
         await state.set_state(Bundle.name)
     elif message.text == '/start':
         await on_start(message, state)

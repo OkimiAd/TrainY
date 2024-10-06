@@ -68,6 +68,8 @@ async def on_FAQ(message: types.Message, state: FSMContext):
 
 class CatalogFlow(StatesGroup):
     choose_id_buy = State()
+    filter_direction = State()
+    filter_company = State()
     choose_id_open = State()
 
 @router.message(Command('open_bundle'))
@@ -76,14 +78,16 @@ async def open_bundle(message: types.Message, state: FSMContext):
     await message.answer("Для того что бы открыть напиши id интересующего тебя bundle", protect_content=True)
     await state.set_state(CatalogFlow.choose_id_open)
 
-
-
-
 @router.message(F.text == 'Доступные мне')
 async def on_catalog(message: types.Message, state: FSMContext):
     await state.clear()
-    await message.answer("Для того что бы открыть напиши /open_bundle", protect_content=True)
+
     list_bundles = db.get_available_bundles_for_user(user_id=message.from_user.id)
+
+    if len(list_bundles) == 0:
+        await message.answer("У вас нет доступных записей. Перейдите в каталог записей для того что бы приобрести еще.", protect_content=True,reply_markup=kb.main)
+        return
+    await message.answer("Для того что бы открыть напиши /open_bundle", protect_content=True)
 
     for item in list_bundles:
         await message.answer(

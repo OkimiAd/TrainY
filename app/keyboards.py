@@ -7,6 +7,12 @@ main = ReplyKeyboardMarkup(resize_keyboard=True,
                            ]
                            )
 
+doesnt_matter = ReplyKeyboardMarkup(resize_keyboard=True,
+                           keyboard=[
+                               [KeyboardButton(text="Не важно")],
+                           ]
+                           )
+
 directions = ReplyKeyboardMarkup(resize_keyboard=True,one_time_keyboard=True,
                            keyboard=[
                                [KeyboardButton(text="Android"), KeyboardButton(text="IOS")],
