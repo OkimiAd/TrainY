@@ -8,7 +8,8 @@ from aiogram.enums import ParseMode
 
 import app.database
 import config
-from app.handlers import router
+from app.create_bundle_flow import router as create_bl_router
+from app.handlers import router as handler_router
 
 
 async def main():
@@ -17,7 +18,7 @@ async def main():
 
     await app.database.db_start()
 
-    dp.include_router(router)
+    dp.include_routers(create_bl_router, handler_router)
     await dp.start_polling(bot)
     print("start_polling")
 
