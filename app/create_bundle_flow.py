@@ -1,16 +1,25 @@
 import time
 
 from aiogram import types, Router, F
-from aiogram.enums import ContentType
+from aiogram.enums import ContentType, ParseMode
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery
 
-import app.database as db
+import app.data.database as db
 import app.keyboards as kb
 from app.handlers import DocumentMess
+import app.data.BundleDAO as daoBundle
+import app.data.UserDAO as daoUser
 
 router = Router()
+
+
+class GetMoney(StatesGroup):
+    get_money = State()
+    get_transfer_data = State()
+
 
 class Bundle(StatesGroup):
     assembly = State()
@@ -23,6 +32,53 @@ class Bundle(StatesGroup):
 
 @router.message(F.text == 'Для авторов')
 async def for_authors(message: types.Message, state: FSMContext):
+    await message.answer(
+        "Это раздел для для тех кто хочет выкладывать свои записи собеседований и зарабатывать на этом. "
+        "Если ты прошел собеседовани, но тебе не дали офер, ты можешь заработать на том что подробная информация про вопросы на собесе сильно поможет следующим соискателям, "
+        "и они прямо как и ты готовы заплатить за эту информацию.", reply_markup=kb.for_authors)
+
+
+@router.message(F.text == 'Вывести деньги')
+async def withdraw_money(message: types.Message, state: FSMContext):
+    user = daoUser.get_user(user_id=message.from_user.id)
+    await message.answer(f'*{user.cash}₽* Вам удалось заработать на данный момент🤑', parse_mode=ParseMode.MARKDOWN_V2)
+    if user.cash < 1000:
+        await message.answer(f'Вывести можно минимум 1000₽. Вам вывод пока что не доступен')
+    else:
+        await message.answer(f'Для того что бы вывести деньги введите\n/get_money')
+
+
+@router.message(Command('get_money'))
+async def withdraw_money(message: types.Message, state: FSMContext):
+    user = daoUser.get_user(user_id=message.from_user.id)
+    if user.cash < 1000:
+        await message.answer(f'Вывод не доступен, потому что у вас меньше минимальной суммы вывода')
+        return
+    await state.set_state(GetMoney.get_money)
+    await message.answer(f'Сколько вы хотите вывести?')
+
+
+@router.message(GetMoney.get_money)
+async def withdraw_money(message: types.Message, state: FSMContext):
+    user = daoUser.get_user(user_id=message.from_user.id)
+    if int(message.text) > user.cash:
+        await message.answer(f'Недостаточно средств. Введите еще раз')
+        return
+    await state.update_data(money=int(message.text))
+    await state.set_state(GetMoney.get_transfer_data)
+    await message.answer(
+        f'Введите номер телефона, имя и банк куда необходимо отправить перевод. Если информация будет некорректная заявка будет отклонена')
+
+
+@router.message(GetMoney.get_transfer_data)
+async def withdraw_money(message: types.Message, state: FSMContext):
+    # message.text
+    # db add money request
+    await message.answer(f'Заявка отправлена и будет обработана в течении 7 рабочих дней')
+
+
+@router.message(F.text == 'Выложить запись')
+async def create_bundle(message: types.Message, state: FSMContext):
     await state.clear()
     await message.answer(
         "Записи распространяются в виде бандлов. "
@@ -124,16 +180,17 @@ async def callback_query(callback: CallbackQuery, state: FSMContext):
 
     data = await state.get_data()
     await callback.message.answer(
-        'Ваш bundle успешно отправлен на модерацию. Когда он пройдет или не пройдет модерацию, вам будет направленно уведомление.', reply_markup=kb.main)
+        'Ваш bundle успешно отправлен на модерацию. Когда он пройдет или не пройдет модерацию, вам будет направленно уведомление.',
+        reply_markup=kb.main)
 
-    await db.create_bundle(author_id=callback.from_user.id,
-                  name=data["name"],
-                  price=data["price"],
-                  company=data["company"],
-                  date_interview=data["date"],
-                  direction=data["direction"],
-                  assembly=data["assembly"],
-                  )
+    await daoBundle.create_bundle(author_id=callback.from_user.id,
+                           name=data["name"],
+                           price=data["price"],
+                           company=data["company"],
+                           date_interview=data["date"],
+                           direction=data["direction"],
+                           assembly=data["assembly"],
+                           )
     time.sleep(2)
     # await on_start(callback.message, state)
     await state.clear()

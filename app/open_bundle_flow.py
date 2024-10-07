@@ -4,9 +4,11 @@ from aiogram import types, Router, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 
-import app.database as db
+import app.data.database as db
 import app.keyboards as kb
 from app.handlers import CatalogFlow
+import app.data.BundleDAO as daoBundle
+import app.data.UserDAO as daoUser
 
 router = Router()
 
@@ -20,7 +22,7 @@ async def open_bundle(message: types.Message, state: FSMContext):
 async def on_catalog(message: types.Message, state: FSMContext):
     await state.clear()
 
-    list_bundles = db.get_available_bundles_for_user(user_id=message.from_user.id)
+    list_bundles = daoBundle.get_available_bundles_for_user(user_id=message.from_user.id)
 
     if len(list_bundles) == 0:
         await message.answer("У вас нет доступных записей. Перейдите в каталог записей для того что бы приобрести еще.", protect_content=True,reply_markup=kb.main)
@@ -35,11 +37,11 @@ async def on_catalog(message: types.Message, state: FSMContext):
 
 @router.message(CatalogFlow.choose_id_open)
 async def date_bundle(message: types.Message, state: FSMContext):
-    have_access = db.user_have_bundle_access(message.from_user.id, int(message.text))
+    have_access = daoUser.is_user_have_bundle_access(message.from_user.id, int(message.text))
     if not have_access:
         await message.answer("У вас нет доступа к этому bundle. Сначала купите его в разделе \"Каталог интеревью\"")
     else:
-        listt = db.get_bundle_assembling(bundle_id = message.text)
+        listt = daoBundle.get_bundle_assembling(bundle_id = message.text)
         y: list = json.loads(listt)
         for i in y:
             if type(i) is dict:

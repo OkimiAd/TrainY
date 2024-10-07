@@ -1,11 +1,10 @@
 from aiogram import types, Router, F
 from aiogram.enums import ParseMode
-from aiogram.filters import CommandStart, Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.utils import markdown
 
-import app.database as db
+import app.data.database as db
 import app.keyboards as kb
 
 router = Router()

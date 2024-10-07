@@ -5,8 +5,10 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 
-import app.database as db
+import app.data.database as db
 from my_bot import bot
+import app.data.BundleDAO as daoBundle
+import app.data.UserDAO as daoUser
 
 router = Router()
 
@@ -39,7 +41,7 @@ async def moderate_bundle(message: types.Message, state: FSMContext):
         await message.answer(f'Доступ запрещен')
         return
 
-    list_bundles = db.get_not_moderated_bundle()
+    list_bundles = daoBundle.get_not_moderated_bundle()
     await message.answer(f'На модерации - {len(list_bundles)}')
 
     if len(list_bundles) == 0:
@@ -52,7 +54,7 @@ async def moderate_bundle(message: types.Message, state: FSMContext):
 
     await state.set_state(AdminFlow.moderate)
     await state.update_data(bundle=item)
-    listt = db.get_bundle_assembling(bundle_id=item.bundle_id)
+    listt = daoBundle.get_bundle_assembling(bundle_id=item.bundle_id)
     y: list = json.loads(listt)
     for i in y:
         if type(i) is dict:
@@ -71,7 +73,7 @@ async def on_admin(message: types.Message, state: FSMContext):
         return
     await message.answer(f'Принято')
     state_data = await state.get_data()
-    await db.approve_bundle(bundle_id=state_data["bundle"].bundle_id)
+    await daoBundle.approve_bundle(bundle_id=state_data["bundle"].bundle_id)
 
     await bot.send_message(chat_id=state_data["bundle"].author_id,
                            text=f'Ваш Bundle id - {state_data["bundle"].bundle_id} был принят')
@@ -100,7 +102,7 @@ async def on_admin(message: types.Message, state: FSMContext):
     await bot.send_message(chat_id=state_data["bundle"].author_id,
                            text=f'Причина - {message.text}')
 
-    db.delete_bundle(bundle_id=state_data["bundle"].bundle_id)
+    daoBundle.delete_bundle(bundle_id=state_data["bundle"].bundle_id)
 
     await state.set_state(AdminFlow.in_admin)
     await moderate_bundle(message, state)

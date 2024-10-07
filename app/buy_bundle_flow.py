@@ -1,11 +1,12 @@
 from aiogram import types, Router, F
-from aiogram.enums import ParseMode
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from app.handlers import CatalogFlow
 
-import app.database as db
+import app.data.database as db
 import app.keyboards as kb
+import app.data.BundleDAO as daoBundle
+import app.data.UserDAO as daoUser
 
 router = Router()
 
@@ -34,7 +35,7 @@ async def filter_company(message: types.Message, state: FSMContext):
 
 async def show_filtered_bundles(message: types.Message, state: FSMContext):
     state_data = await state.get_data()
-    list_bundles = db.get_filtered_bundles(message.from_user.id, company=state_data["company"],
+    list_bundles = daoBundle.get_filtered_bundles(message.from_user.id, company=state_data["company"],
                                            direction=state_data["direction"])
 
     await state.clear()
@@ -60,6 +61,6 @@ async def buy_bundle(message: types.Message, state: FSMContext):
 
 @router.message(CatalogFlow.choose_id_buy)
 async def date_bundle(message: types.Message, state: FSMContext):
-    db.buy_bundle(user_id=message.from_user.id, bundle_id=int(message.text))
+    daoBundle.buy_bundle(user_id=message.from_user.id, bundle_id=int(message.text))
     await state.clear()
     await message.answer("Bundle успешно куплен. Теперь ты его можешь найти в разделе \"Доступные мне\"")

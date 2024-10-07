@@ -28,6 +28,13 @@ subscribes = ReplyKeyboardMarkup(resize_keyboard=True,
                                  ]
                                  )
 
+for_authors = ReplyKeyboardMarkup(resize_keyboard=True,
+                                 keyboard=[
+                                     [KeyboardButton(text="Выложить запись")],
+                                     [KeyboardButton(text="Вывести деньги")]
+                                 ]
+                                 )
+
 create_bundle = InlineKeyboardMarkup(
     inline_keyboard=[[InlineKeyboardButton(text="Отправить на модерацию", callback_data="moderate"),
                       InlineKeyboardButton(text="Удалить", callback_data="delete")]])
