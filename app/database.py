@@ -138,7 +138,7 @@ def get_filtered_bundles(user_id: int, company: str, direction: str):
         else:
             company_str = f'AND company = "{company}" COLLATE NOCASE'
 
-        exe = f'SELECT * FROM bundles WHERE direction = "{direction}" COLLATE NOCASE {company_str} AND id NOT IN {s} ORDER BY id DESC'
+        exe = f'SELECT * FROM bundles WHERE direction = "{direction}" COLLATE NOCASE {company_str} AND id NOT IN {s} AND is_moderated = 1 ORDER BY id DESC'
         bundless: list[tuple] = cursor.execute(exe).fetchmany(5)
         new_listt = []
 

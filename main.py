@@ -21,8 +21,6 @@ async def main():
 
     await app.database.db_start()
 
-
-
     dp.include_routers(create_bl_router, buy_bundle_flow,open_bl_router, handler_router)
     await dp.start_polling(bot)
     print("start_polling")

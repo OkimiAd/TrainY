@@ -91,7 +91,6 @@ class SubscribesFlow(StatesGroup):
     add_sub_direction = State()
     add_sub_company = State()
 
-
 @router.message(SubscribesFlow.add_sub_direction)
 async def filter_direction(message: types.Message, state: FSMContext):
     await state.update_data(direction=message.text)
@@ -103,7 +102,8 @@ async def filter_direction(message: types.Message, state: FSMContext):
 async def filter_company(message: types.Message, state: FSMContext):
     await state.update_data(company=message.text)
     state_data = await state.get_data()
-    db.add_subscribe_search(user_id= message.from_user.id, direction=state_data["direction"], company=state_data["company"], chat_id = message.chat.id)
+    db.add_subscribe_search(user_id=message.from_user.id, direction=state_data["direction"],
+                            company=state_data["company"], chat_id=message.chat.id)
     await message.answer("Подписка успешно добавлена", protect_content=True, reply_markup=kb.main)
     await state.clear()
 
