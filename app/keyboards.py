@@ -28,6 +28,10 @@ subscribes = ReplyKeyboardMarkup(resize_keyboard=True,
                                  ]
                                  )
 
-moderate = InlineKeyboardMarkup(
+create_bundle = InlineKeyboardMarkup(
     inline_keyboard=[[InlineKeyboardButton(text="Отправить на модерацию", callback_data="moderate"),
                       InlineKeyboardButton(text="Удалить", callback_data="delete")]])
+
+moderate = InlineKeyboardMarkup(
+    inline_keyboard=[[InlineKeyboardButton(text="Принять", callback_data="approve"),
+                      InlineKeyboardButton(text="Отклонить", callback_data="reject")]])

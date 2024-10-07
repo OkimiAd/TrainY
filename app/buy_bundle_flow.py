@@ -1,4 +1,5 @@
 from aiogram import types, Router, F
+from aiogram.enums import ParseMode
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from app.handlers import CatalogFlow
@@ -42,9 +43,11 @@ async def show_filtered_bundles(message: types.Message, state: FSMContext):
         return
 
     await message.answer("Вот список", protect_content=True,reply_markup=kb.main)
+
     for item in list_bundles:
         await message.answer(
-            f'(id {item.bundle_id}) {item.name} {item.price}₽\n{item.direction} {item.company}\n{item.date_interview}')
+            f'(id {item.bundle_id}) - {item.name} - {item.price}₽\n'
+            f'{item.direction} - {item.company} - {item.date_interview}',)
     await message.answer("Для того что бы купить напиши /buy_bundle", protect_content=True)
 
 

@@ -29,7 +29,8 @@ async def on_catalog(message: types.Message, state: FSMContext):
 
     for item in list_bundles:
         await message.answer(
-            f'id - {item.bundle_id}\n{item.name}\n{item.company}\n{item.direction}\n{item.date_interview}\n{item.price}₽')
+            f'(id {item.bundle_id}) - {item.name} - {item.price}₽\n'
+            f'{item.direction} - {item.company} - {item.date_interview}')
 
 
 @router.message(CatalogFlow.choose_id_open)

@@ -2,14 +2,7 @@ import datetime
 import json
 import sqlite3 as sq
 
-from sqlalchemy.util import await_only
-
 from main import bot
-
-
-# connection = sq.connect('database.db')
-# cursor = connection.cursor()
-
 
 async def db_start():
     with sq.connect("database.db") as connection:
@@ -30,7 +23,8 @@ async def db_start():
                        "company TEXT,"
                        "date_interview TEXT,"
                        "direction TEXT,"
-                       "assembling JSON"
+                       "assembling JSON,"
+                       "is_moderated BIT"
                        ")"
                        )
 
@@ -61,18 +55,16 @@ async def create_bundle(*, author_id: int, name: str, price: int, company: str, 
             (created_date, author_id, name, price, company, date_interview, direction,
              json.dumps(assembly, default=obj_dict)))
 
-        await initiate_mailing(company, direction, cursor.lastrowid, name, price, date_interview, author_id)
+        # await initiate_mailing(company, direction, cursor.lastrowid, name, price, date_interview)
 
 
-async def initiate_mailing(company: str, direction: str, bundle_id, name: str, price: int, date_interview: str,
-                           author_id: int, ):
+async def initiate_mailing(company: str, direction: str, bundle_id, name: str, price: int, date_interview: str,):
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
         chat_list: list[tuple] = cursor.execute(
             f'SELECT chat_id FROM subscribes WHERE company = "{company}" COLLATE NOCASE AND direction = "{direction}" COLLATE NOCASE').fetchall()
 
         for chat in chat_list:
-            # if author_id == chat_id: continue
             chat_id: str = chat[0]
             await bot.send_message(chat_id=chat_id, text="По вашей подписке есть новая запись",
                                    protect_content=True)
@@ -100,6 +92,16 @@ def buy_bundle(*, user_id: int, bundle_id: int):
         y.append(int(bundle_id))
         jsonnn = json.dumps(y, default=obj_dict)
         cursor.execute(f'UPDATE users SET available_bundles = "{jsonnn}" WHERE id = {user_id}')
+
+def approve_bundle(*, bundle_id: int):
+    with sq.connect("database.db") as connection:
+        cursor = connection.cursor()
+        cursor.execute(f'UPDATE bundles SET is_moderated = "1" WHERE id = "{bundle_id}"')
+
+def delete_bundle(*, bundle_id: int):
+    with sq.connect("database.db") as connection:
+        cursor = connection.cursor()
+        cursor.execute(f'DElETE FROM bundles WHERE id = "{bundle_id}"')
 
 
 class Bundle:
@@ -139,7 +141,20 @@ def get_filtered_bundles(user_id: int, company: str, direction: str):
             company_str = f'AND company = "{company}" COLLATE NOCASE'
 
         exe = f'SELECT * FROM bundles WHERE direction = "{direction}" COLLATE NOCASE {company_str} AND id NOT IN {s} AND is_moderated = 1 ORDER BY id DESC'
-        bundless: list[tuple] = cursor.execute(exe).fetchmany(5)
+        bundless: list[tuple] = cursor.execute(exe).fetchmany(10)
+        new_listt = []
+
+        for t in bundless:
+            new_listt.append(
+                Bundle(bundle_id=t[0], created_date=t[1], author_id=t[2], name=t[3], price=t[4], company=t[5],
+                       date_interview=t[6], direction=t[7], assembling=t[8]))
+        return new_listt
+
+def get_not_moderated_bundle():
+    with sq.connect("database.db") as connection:
+        cursor = connection.cursor()
+        exe = f'SELECT * FROM bundles WHERE is_moderated = 0 ORDER BY id ASC'
+        bundless: list[tuple] = cursor.execute(exe).fetchall()
         new_listt = []
 
         for t in bundless:
@@ -158,12 +173,12 @@ def user_have_bundle_access(user_id: int, bundle_id: int) -> bool:
         return bundle_id_list.__contains__(bundle_id)
 
 
-def add_subscribe_search(*, user_id: int, chat_id: int, company: str, direction: str):
+def add_subscribe_search(*, chat_id: int, company: str, direction: str):
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
         cursor.execute(
-            'INSERT OR REPLACE INTO subscribes (user_id, company, direction, chat_id) VALUES (?, ?, ?, ?)',
-            (user_id, company, direction, chat_id))
+            'INSERT OR REPLACE INTO subscribes (chat_id, company, direction) VALUES (?, ?, ?)',
+            (company, direction, chat_id))
 
 
 def get_available_bundles_for_user(user_id: int):

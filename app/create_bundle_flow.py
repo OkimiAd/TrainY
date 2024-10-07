@@ -115,7 +115,7 @@ async def end_assembling(message: types.Message, state: FSMContext):
             await message.answer(i)
     await message.answer('А в каталоге вакансий будет выглядеть так')
     await message.answer(f'{data["name"]}\n{data["company"]}\n{data["direction"]}\n{data["date"]}\n{data["price"]}₽',
-                         reply_markup=kb.moderate)
+                         reply_markup=kb.create_bundle)
 
 
 @router.callback_query(F.data == "moderate")
