@@ -35,14 +35,15 @@ async def on_catalog(message: types.Message, state: FSMContext):
 
 @router.message(CatalogFlow.choose_id_open)
 async def date_bundle(message: types.Message, state: FSMContext):
-    have_access = db.user_have_bundle_access(message.from_user.id, int( message.text))
+    have_access = db.user_have_bundle_access(message.from_user.id, int(message.text))
     if not have_access:
         await message.answer("У вас нет доступа к этому bundle. Сначала купите его в разделе \"Каталог интеревью\"")
     else:
-        listt = db.get_bundle(bundle_id = message.text)
+        listt = db.get_bundle_assembling(bundle_id = message.text)
         y: list = json.loads(listt)
         for i in y:
             if type(i) is dict:
                 await message.answer_document(i["doc_id"])
             else:
                 await message.answer(i)
+    await state.clear()

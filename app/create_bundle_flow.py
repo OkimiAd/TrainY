@@ -8,7 +8,7 @@ from aiogram.types import CallbackQuery
 
 import app.database as db
 import app.keyboards as kb
-from app.handlers import on_start, DocumentMess
+from app.handlers import DocumentMess
 
 router = Router()
 
@@ -17,7 +17,7 @@ class Bundle(StatesGroup):
     name = State()
     price = State()
     company = State()
-    date = State()
+    date_interview = State()
     direction = State()
 
 
@@ -46,8 +46,6 @@ async def assembly_bundle(message: types.Message, state: FSMContext):
         await message.answer("Бандл успешно собран")
         await message.answer("Теперь введи название бандла(Англ)")
         await state.set_state(Bundle.name)
-    elif message.text == '/start':
-        await on_start(message, state)
     else:
         data = await state.get_data()
         list_elements = data.get("assembly", [])
@@ -87,11 +85,11 @@ async def price_bundle(message: types.Message, state: FSMContext):
 @router.message(Bundle.company)
 async def company_name_bundle(message: types.Message, state: FSMContext):
     await state.update_data(company=message.text)
-    await state.set_state(Bundle.date)
+    await state.set_state(Bundle.date_interview)
     await message.answer("Введи дату собеседования в формате dd.MM.yyyy")
 
 
-@router.message(Bundle.date)
+@router.message(Bundle.date_interview)
 async def date_bundle(message: types.Message, state: FSMContext):
     await state.update_data(date=message.text)
     await state.set_state(Bundle.direction)
