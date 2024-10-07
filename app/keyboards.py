@@ -16,8 +16,10 @@ doesnt_matter = ReplyKeyboardMarkup(resize_keyboard=True,
 
 directions = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True,
                                  keyboard=[
-                                     [KeyboardButton(text="Android"), KeyboardButton(text="IOS")],
-                                     [KeyboardButton(text="Front-end"), KeyboardButton(text="Back_end")],
+                                     [KeyboardButton(text="Android"), KeyboardButton(text="IOS"), KeyboardButton(text="Flutter")],
+                                     [KeyboardButton(text="Front-end"), KeyboardButton(text="Back-end"), KeyboardButton(text="Devops")],
+                                     [KeyboardButton(text="QA"), KeyboardButton(text="Design"), KeyboardButton(text="GameDev")],
+                                     [KeyboardButton(text="System Analytics"), KeyboardButton(text="Product Manager"), KeyboardButton(text="Ml+DS")],
                                  ]
                                  )
 

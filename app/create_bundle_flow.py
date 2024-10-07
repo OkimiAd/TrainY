@@ -1,4 +1,5 @@
 import time
+from warnings import catch_warnings
 
 from aiogram import types, Router, F
 from aiogram.enums import ContentType, ParseMode
@@ -7,7 +8,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery
 
-import app.data.database as db
 import app.keyboards as kb
 from app.handlers import DocumentMess
 import app.data.BundleDAO as daoBundle
@@ -72,8 +72,6 @@ async def withdraw_money(message: types.Message, state: FSMContext):
 
 @router.message(GetMoney.get_transfer_data)
 async def withdraw_money(message: types.Message, state: FSMContext):
-    # message.text
-    # db add money request
     await message.answer(f'Заявка отправлена и будет обработана в течении 7 рабочих дней')
 
 
@@ -88,58 +86,68 @@ async def create_bundle(message: types.Message, state: FSMContext):
         "Фото обязательно присылать без сжатия")
 
     await message.answer("Для того что бы завершить создание бандла отправье\n/commit")
-
     await state.set_state(Bundle.assembly)
-
-    user = message.from_user
-    print("Для авторов " + user.username)
 
 
 @router.message(Bundle.assembly)
 async def assembly_bundle(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    list_elements = data.get("assembly", [])
+
     if message.text == '/commit':
-        print('/commit')
+        if len(list_elements) < 1:
+            await message.answer("Нужно добавить хотя бы один элемент в бандл")
+            return
         await message.answer("Бандл успешно собран")
-        await message.answer("Теперь введи название бандла(Англ)")
+        await message.answer("Введи название бандла")
         await state.set_state(Bundle.name)
     else:
-        data = await state.get_data()
-        list_elements = data.get("assembly", [])
-
         if message.content_type is ContentType.TEXT:
             list_elements.append(message.text)
         elif message.content_type is ContentType.DOCUMENT:
             list_elements.append(DocumentMess(message.document.file_id))
         else:
-            await message.answer("Этот формат не поддерживается в бандде")
+            await message.answer(
+                "Этот формат не поддерживается в бандле. Попробуйте отправить этот документ без сжатия")
         await state.update_data(assembly=list_elements)
 
 
 @router.message(Bundle.name)
 async def name_bundle(message: types.Message, state: FSMContext):
-    user = message.from_user
-    print("name_bundle " + user.username + " " + message.text)
-
+    if len(message.text) < 5:
+        await message.answer(f'Минимум 5 символов. Сейчас {len(message.text)}')
+        return
+    if len(message.text) > 40:
+        await message.answer(f'Максимум 40 символов. Сейчас {len(message.text)}')
+        return
     await state.update_data(name=message.text)
 
-    await message.answer("Название добавлено")
-    await message.answer("Теперь введи стоимость в рублях(только число, без доп символов)")
+    await message.answer("Введи стоимость в рублях(только число, без доп символов)")
     await state.set_state(Bundle.price)
 
 
 @router.message(Bundle.price)
 async def price_bundle(message: types.Message, state: FSMContext):
-    user = message.from_user
-    print("price_bundle " + user.username + " " + message.text)
-
+    try:
+        int(message.text)
+    except:
+        await message.answer("Введите число")
+        return
     await state.update_data(price=message.text)
 
-    await message.answer("Введи название компании")
+    await message.answer("Введи название компании(Англ)")
     await state.set_state(Bundle.company)
 
 
 @router.message(Bundle.company)
 async def company_name_bundle(message: types.Message, state: FSMContext):
+    if len(message.text) < 2:
+        await message.answer(f'Минимум 2 символов. Сейчас {len(message.text)}')
+        return
+    if len(message.text) > 40:
+        await message.answer(f'Максимум 40 символов. Сейчас {len(message.text)}')
+        return
+
     await state.update_data(company=message.text)
     await state.set_state(Bundle.date_interview)
     await message.answer("Введи дату собеседования в формате dd.MM.yyyy")
@@ -147,6 +155,12 @@ async def company_name_bundle(message: types.Message, state: FSMContext):
 
 @router.message(Bundle.date_interview)
 async def date_bundle(message: types.Message, state: FSMContext):
+    try:
+        time.strptime(message.text, '%d.%m.%Y')
+    except:
+        await message.answer("Введите дату в правильном формате")
+        return
+
     await state.update_data(date=message.text)
     await state.set_state(Bundle.direction)
     await message.answer("Какое направление? BackEnd, FrontEnd и другие", reply_markup=kb.directions)
@@ -184,13 +198,17 @@ async def callback_query(callback: CallbackQuery, state: FSMContext):
         reply_markup=kb.main)
 
     await daoBundle.create_bundle(author_id=callback.from_user.id,
-                           name=data["name"],
-                           price=data["price"],
-                           company=data["company"],
-                           date_interview=data["date"],
-                           direction=data["direction"],
-                           assembly=data["assembly"],
-                           )
-    time.sleep(2)
-    # await on_start(callback.message, state)
+                                  name=data["name"],
+                                  price=data["price"],
+                                  company=data["company"],
+                                  date_interview=data["date"],
+                                  direction=data["direction"],
+                                  assembly=data["assembly"],
+                                  )
+    time.sleep(1)
+    await state.clear()
+
+@router.callback_query(F.data == "delete")
+async def callback_query(callback: CallbackQuery, state: FSMContext):
+    await callback.message.answer("Возвращение в начало чата", reply_markup=kb.main)
     await state.clear()

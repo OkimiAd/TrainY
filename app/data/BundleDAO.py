@@ -4,7 +4,7 @@ from datetime import datetime
 
 from app.data.UserDAO import credit_to_the_author
 from app.data.entities import Bundle
-from main import bot
+from my_bot import bot
 
 
 def create_bundle(*, author_id: int, name: str, price: int, company: str, date_interview: str, direction: str,

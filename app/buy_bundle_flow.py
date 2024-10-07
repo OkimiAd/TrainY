@@ -3,10 +3,8 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from app.handlers import CatalogFlow
 
-import app.data.database as db
 import app.keyboards as kb
 import app.data.BundleDAO as daoBundle
-import app.data.UserDAO as daoUser
 
 router = Router()
 

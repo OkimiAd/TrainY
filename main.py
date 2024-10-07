@@ -15,8 +15,6 @@ from app.admin_flow import router as admin_router
 from app.handlers import router as handler_router
 from my_bot import bot
 import app.keyboards as kb
-import app.data.database as db
-import app.data.BundleDAO as daoBundle
 import app.data.UserDAO as daoUser
 
 dp = Dispatcher()
@@ -31,6 +29,7 @@ async def on_start(message: types.Message, state: FSMContext):
         "Это бот TrainY! Тут ты можешь найти свежие записи собеседований в любую компанию на любую должность.\n"
         "Для начала можешь перейти в каталог интервью.☺️",
         reply_markup=kb.main)
+    await message.answer("v0.1")
 
 
     daoUser.add_user(user.id, user.username)
@@ -39,7 +38,7 @@ async def on_start(message: types.Message, state: FSMContext):
 
 @dp.message(Command('cancel'))
 async def on_cancel(message: types.Message, state: FSMContext):
-    await message.answer("Возвращение в начало чата")
+    await message.answer("Возвращение в начало чата", reply_markup=kb.main)
     await state.clear()
 
 
