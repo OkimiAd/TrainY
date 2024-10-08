@@ -8,7 +8,6 @@ import app.data.BundleDAO as daoBundle
 
 router = Router()
 
-
 @router.message(F.text == 'Каталог интервью')
 async def on_catalog(message: types.Message, state: FSMContext):
     await state.clear()
@@ -16,13 +15,11 @@ async def on_catalog(message: types.Message, state: FSMContext):
                          reply_markup=kb.directions)
     await state.set_state(CatalogFlow.filter_direction)
 
-
 @router.message(CatalogFlow.filter_direction)
 async def filter_direction(message: types.Message, state: FSMContext):
     await state.update_data(direction=message.text)
     await state.set_state(CatalogFlow.filter_company)
     await message.answer("Какая компания вас интересует?(Англ)", protect_content=True, reply_markup=kb.doesnt_matter)
-
 
 @router.message(CatalogFlow.filter_company)
 async def filter_company(message: types.Message, state: FSMContext):

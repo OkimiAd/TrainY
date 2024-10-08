@@ -39,7 +39,7 @@ async def on_catalog(message: types.Message, state: FSMContext):
 async def date_bundle(message: types.Message, state: FSMContext):
     have_access = daoUser.is_user_have_bundle_access(message.from_user.id, int(message.text))
     if not have_access:
-        await message.answer("У вас нет доступа к этому bundle. Сначала купите его в разделе \"Каталог интеревью\"")
+        await message.answer("У вас нет доступа к этому bundle или его не существует. Сначала купите его в разделе \"Каталог интеревью\"")
     else:
         listt = daoBundle.get_bundle_assembling(bundle_id = message.text)
         y: list = json.loads(listt)

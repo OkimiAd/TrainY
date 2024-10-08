@@ -25,8 +25,11 @@ class Bundle:
     date_interview: str
     direction: str
     assembling: list
+    bought_count: int
+    earned: int
 
-    def __init__(self, bundle_id, created_date, author_id, name, price, company, date_interview, direction, assembling):
+
+    def __init__(self, bundle_id, created_date, author_id, name, price, company, date_interview, direction, assembling,bought_count,earned):
         self.bundle_id = bundle_id
         self.created_date = created_date
         self.author_id = author_id
@@ -36,3 +39,5 @@ class Bundle:
         self.date_interview = date_interview
         self.direction = direction
         self.assembling = assembling
+        self.bought_count = bought_count
+        self.earned = earned

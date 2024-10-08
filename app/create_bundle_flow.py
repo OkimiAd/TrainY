@@ -83,7 +83,8 @@ async def create_bundle(message: types.Message, state: FSMContext):
         "Каждый бандл состоит из элементов текста, аудио или фото документов. "
         "Необходим добавить как минимум один из элементов. "
         "Для того что бы добавить новый элемент просто отправь его новым сообщением. "
-        "Фото обязательно присылать без сжатия")
+        "Фото обязательно присылать без сжатия\n"
+        "А так же обязательно дождитесь пока все файлы загрузятся, прежде чем идти дальше")
 
     await message.answer("Для того что бы завершить создание бандла отправье\n/commit")
     await state.set_state(Bundle.assembly)
@@ -205,10 +206,25 @@ async def callback_query(callback: CallbackQuery, state: FSMContext):
                                   direction=data["direction"],
                                   assembly=data["assembly"],
                                   )
-    time.sleep(1)
     await state.clear()
 
 @router.callback_query(F.data == "delete")
 async def callback_query(callback: CallbackQuery, state: FSMContext):
     await callback.message.answer("Возвращение в начало чата", reply_markup=kb.main)
     await state.clear()
+
+
+@router.message(F.text == 'Мои записи')
+async def withdraw_money(message: types.Message, state: FSMContext):
+    list_bundles = daoBundle.get_bundles_for_author(message.from_user.id)
+    for item in list_bundles:
+        await message.answer(
+            f'(id {item.bundle_id}) - {item.name} - {item.price}₽\n'
+            f'{item.direction} - {item.company} - {item.date_interview}\n'
+            f'скачиваний - {item.bought_count} заработано - {item.earned}₽')
+    # user = daoUser.get_user(user_id=message.from_user.id)
+    # await message.answer(f'*{user.cash}₽* Вам удалось заработать на данный момент🤑', parse_mode=ParseMode.MARKDOWN_V2)
+    # if user.cash < 1000:
+    #     await message.answer(f'Вывести можно минимум 1000₽. Вам вывод пока что не доступен')
+    # else:
+    #     await message.answer(f'Для того что бы вывести деньги введите\n/get_money')

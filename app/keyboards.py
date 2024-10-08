@@ -33,7 +33,7 @@ subscribes = ReplyKeyboardMarkup(resize_keyboard=True,
 for_authors = ReplyKeyboardMarkup(resize_keyboard=True,
                                  keyboard=[
                                      [KeyboardButton(text="Выложить запись")],
-                                     [KeyboardButton(text="Вывести деньги")]
+                                     [KeyboardButton(text="Вывести деньги"), KeyboardButton(text="Мои записи")]
                                  ]
                                  )
 

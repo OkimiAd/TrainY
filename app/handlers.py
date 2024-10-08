@@ -1,19 +1,30 @@
 from aiogram import types, Router, F
 from aiogram.enums import ParseMode
+from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.utils import markdown
+from rich.box import MARKDOWN
 
 import app.data.database as db
 import app.keyboards as kb
 
 router = Router()
 
+
 class DocumentMess:
     doc_id: int
 
     def __init__(self, f):
         self.doc_id = f
+
+
+class SubscribesFlow(StatesGroup):
+    add_sub_direction = State()
+    add_sub_company = State()
+    delete_sub = State()
+    delete_all_sub = State()
+
 
 @router.message(F.text == 'FAQ')
 async def on_FAQ(message: types.Message, state: FSMContext):
@@ -66,10 +77,58 @@ async def subscribe_search(message: types.Message, state: FSMContext):
         protect_content=True, reply_markup=kb.directions)
 
 
-class SubscribesFlow(StatesGroup):
-    add_sub_direction = State()
-    add_sub_company = State()
+@router.message(F.text == 'Мои подписки')
+async def subscribe_search(message: types.Message, state: FSMContext):
+    await state.clear()
+    list_subs = db.get_subscribes_for_user(chat_id=message.chat.id)
+    if len(list_subs) == 0:
+        await message.answer(
+            "Подписок пока нет. Нажмите кнопку \"Добавить подписку\"",
+            protect_content=True)
+        return
 
+
+    await message.answer(
+        "Если хотите удалить подписку, напишите \n/delete_sub или /delete_sub_all",
+        protect_content=True)
+
+    for sub in list_subs:
+        await message.answer(
+            f'id *{sub[0]}* direction \- *{sub[3]}* company \- *{sub[2]}*',
+            protect_content=True, parse_mode=ParseMode.MARKDOWN_V2)
+
+
+@router.message(Command('delete_sub'))
+async def subscribe_search(message: types.Message, state: FSMContext):
+    await state.clear()
+    await state.set_state(SubscribesFlow.delete_sub)
+    await message.answer("Напишите id подписки которую вы хотите удалить")
+
+@router.message(Command('delete_sub_all'))
+async def subscribe_search(message: types.Message, state: FSMContext):
+    await state.clear()
+    await state.set_state(SubscribesFlow.delete_all_sub)
+    await message.answer("Вы уверены что хотите удалить все подписки? Y/N")
+
+@router.message(SubscribesFlow.delete_sub)
+async def filter_direction(message: types.Message, state: FSMContext):
+    try:
+        db.delete_subscribe(chat_id=message.chat.id, sub_id=int(message.text))
+        await message.answer(f'Подписка id {int(message.text)} удалена')
+    except:
+        await message.answer(f'Введите id(только число)')
+
+@router.message(SubscribesFlow.delete_all_sub)
+async def filter_direction(message: types.Message, state: FSMContext):
+    await state.clear()
+
+    if message.text == 'Y':
+        db.delete_all_subscribes(chat_id=message.chat.id)
+        await message.answer(f'Все подписки удалены')
+    elif message.text == 'N':
+        await message.answer("Возвращение в начало чата", reply_markup=kb.main)
+    else:
+        await message.answer("Y/N?")
 
 @router.message(SubscribesFlow.add_sub_direction)
 async def filter_direction(message: types.Message, state: FSMContext):
