@@ -6,7 +6,6 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery
-from numba.cpython.randomimpl import double
 
 import app.keyboards as kb
 from app.handlers import DocumentMess
