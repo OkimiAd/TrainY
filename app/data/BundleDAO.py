@@ -18,6 +18,16 @@ def create_bundle(*, author_id: int, name: str, price: int, company: str, date_i
              json.dumps(assembly, default=obj_dict)))
 
 
+        original_list: str = cursor.execute(f'SELECT available_bundles FROM users WHERE id = {author_id}').fetchone()[
+            0]
+        if original_list == '"':
+            original_list = "[]"
+        y: list = json.loads(original_list)
+        y.append(cursor.lastrowid)
+        jsonnn = json.dumps(y, default=obj_dict)
+        cursor.execute(f'UPDATE users SET available_bundles = "{jsonnn}" WHERE id = {author_id}')
+
+
 def delete_bundle(*, bundle_id: int):
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
@@ -155,7 +165,7 @@ def get_bundles_for_author(author_id: int) -> list[Bundle]:
         for t in bundles_list_tuple:
             new_listt.append(
                 Bundle(bundle_id=t[0], created_date=t[1], author_id=t[2], name=t[3], price=t[4], company=t[5],
-                       date_interview=t[6], direction=t[7], assembling=t[8], bought_count=t[9], earned=t[10]))
+                       date_interview=t[6], direction=t[7], assembling=t[8], bought_count=t[10], earned=t[11]))
 
         return new_listt
 

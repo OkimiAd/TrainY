@@ -58,9 +58,16 @@ async def moderate_bundle(message: types.Message, state: FSMContext):
     y: list = json.loads(listt)
     for i in y:
         if type(i) is dict:
-            await message.answer_document(i["doc_id"])
+            if i["type_doc"] == "doc":
+                await message.answer_document(i["file_id"], protect_content=True)
+            elif i["type_doc"] == "audio":
+                await message.answer_audio(i["file_id"], protect_content=True)
+            elif i["type_doc"] == "photo":
+                await message.answer_photo(i["file_id"], protect_content=True)
+            elif i["type_doc"] == "video":
+                await message.answer_video(i["file_id"], protect_content=True)
         else:
-            await message.answer(i)
+            await message.answer(i, protect_content=True)
 
     await message.answer(f'/approve - принять\n'
                          f'/reject - отклонить')

@@ -4,7 +4,6 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.utils import markdown
-from rich.box import MARKDOWN
 
 import app.data.database as db
 import app.keyboards as kb
@@ -13,11 +12,14 @@ router = Router()
 
 
 class DocumentMess:
-    doc_id: int
+    type_doc:str = "doc"
+    caption:str = ""
+    file_id: int
 
-    def __init__(self, f):
-        self.doc_id = f
-
+    def __init__(self, f, type_doc, caption):
+        self.file_id = f
+        self.type_doc = type_doc
+        self.caption = caption
 
 class SubscribesFlow(StatesGroup):
     add_sub_direction = State()
@@ -120,13 +122,13 @@ async def filter_direction(message: types.Message, state: FSMContext):
 
 @router.message(SubscribesFlow.delete_all_sub)
 async def filter_direction(message: types.Message, state: FSMContext):
-    await state.clear()
-
     if message.text == 'Y':
         db.delete_all_subscribes(chat_id=message.chat.id)
         await message.answer(f'Все подписки удалены')
+        await state.clear()
     elif message.text == 'N':
         await message.answer("Возвращение в начало чата", reply_markup=kb.main)
+        await state.clear()
     else:
         await message.answer("Y/N?")
 

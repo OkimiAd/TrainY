@@ -43,7 +43,7 @@ async def show_filtered_bundles(message: types.Message, state: FSMContext):
     for item in list_bundles:
         await message.answer(
             f'(id {item.bundle_id}) - {item.name} - {item.price}₽\n'
-            f'{item.direction} - {item.company} - {item.date_interview}',)
+            f'{item.direction} - {item.company} - {item.date_interview} \n{item.bought_count} раз купили',)
     await message.answer("Для того что бы купить напиши /buy_bundle", protect_content=True)
 
 

@@ -1,5 +1,4 @@
 import time
-from warnings import catch_warnings
 
 from aiogram import types, Router, F
 from aiogram.enums import ContentType, ParseMode
@@ -7,6 +6,7 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import CallbackQuery
+from numba.cpython.randomimpl import double
 
 import app.keyboards as kb
 from app.handlers import DocumentMess
@@ -42,6 +42,7 @@ async def for_authors(message: types.Message, state: FSMContext):
 async def withdraw_money(message: types.Message, state: FSMContext):
     user = daoUser.get_user(user_id=message.from_user.id)
     await message.answer(f'*{user.cash}₽* Вам удалось заработать на данный момент🤑', parse_mode=ParseMode.MARKDOWN_V2)
+    await message.answer(f'Комиссия платформы составляет 20% \+ 13% НДФЛ', parse_mode=ParseMode.MARKDOWN_V2)
     if user.cash < 1000:
         await message.answer(f'Вывести можно минимум 1000₽. Вам вывод пока что не доступен')
     else:
@@ -64,6 +65,9 @@ async def withdraw_money(message: types.Message, state: FSMContext):
     if int(message.text) > user.cash:
         await message.answer(f'Недостаточно средств. Введите еще раз')
         return
+
+    await message.answer(f'Итого к выводу {message.text}₽ - {int(float(message.text)/100*20)}₽ (комиссия 20%) - {int(float(message.text)/100*13)}₽ (НДФЛ 13%) = {int(float(message.text)/100*67)}₽')
+
     await state.update_data(money=int(message.text))
     await state.set_state(GetMoney.get_transfer_data)
     await message.answer(
@@ -79,11 +83,10 @@ async def withdraw_money(message: types.Message, state: FSMContext):
 async def create_bundle(message: types.Message, state: FSMContext):
     await state.clear()
     await message.answer(
-        "Записи распространяются в виде бандлов. "
-        "Каждый бандл состоит из элементов текста, аудио или фото документов. "
-        "Необходим добавить как минимум один из элементов. "
-        "Для того что бы добавить новый элемент просто отправь его новым сообщением. "
-        "Фото обязательно присылать без сжатия\n"
+        "Записи распространяются в виде бандлов. \n"
+        "Каждый бандл состоит из элементов текста, аудио или фото документов. \n"
+        "Необходим добавить как минимум один из элементов. \n"
+        "Для того что бы добавить новый элемент просто отправь его новым сообщением.\n"
         "А так же обязательно дождитесь пока все файлы загрузятся, прежде чем идти дальше")
 
     await message.answer("Для того что бы завершить создание бандла отправье\n/commit")
@@ -106,7 +109,13 @@ async def assembly_bundle(message: types.Message, state: FSMContext):
         if message.content_type is ContentType.TEXT:
             list_elements.append(message.text)
         elif message.content_type is ContentType.DOCUMENT:
-            list_elements.append(DocumentMess(message.document.file_id))
+            list_elements.append(DocumentMess(message.document.file_id, type_doc="doc", caption= message.caption))
+        elif message.content_type is ContentType.AUDIO:
+            list_elements.append(DocumentMess(message.audio.file_id, type_doc="audio", caption= message.caption))
+        elif message.content_type is ContentType.VIDEO:
+            list_elements.append(DocumentMess(message.video.file_id, type_doc="video", caption= message.caption))
+        elif message.content_type is ContentType.PHOTO:
+            list_elements.append(DocumentMess(message.photo[0].file_id , type_doc="photo", caption= message.caption))
         else:
             await message.answer(
                 "Этот формат не поддерживается в бандле. Попробуйте отправить этот документ без сжатия")
@@ -170,16 +179,19 @@ async def date_bundle(message: types.Message, state: FSMContext):
 @router.message(Bundle.direction)
 async def grade_bundle(message: types.Message, state: FSMContext):
     await state.update_data(direction=message.text)
-    await end_assembling(message, state)
-
-
-async def end_assembling(message: types.Message, state: FSMContext):
     await message.answer(f'Данные записаны и вот так они будут выглядеть для покупателя')
     data = await state.get_data()
     listt = data["assembly"]
     for i in listt:
         if type(i) is DocumentMess:
-            await message.answer_document(i.doc_id)
+            if i.type_doc == "doc":
+                await message.answer_document(i.file_id, caption=i.caption)
+            elif i.type_doc == "audio":
+                await message.answer_audio(i.file_id, caption=i.caption)
+            elif i.type_doc == "photo":
+                await message.answer_photo(i.file_id, caption=i.caption)
+            elif i.type_doc == "video":
+                await message.answer_video(i.file_id, caption=i.caption)
         else:
             await message.answer(i)
     await message.answer('А в каталоге вакансий будет выглядеть так')
@@ -198,15 +210,16 @@ async def callback_query(callback: CallbackQuery, state: FSMContext):
         'Ваш bundle успешно отправлен на модерацию. Когда он пройдет или не пройдет модерацию, вам будет направленно уведомление.',
         reply_markup=kb.main)
 
-    await daoBundle.create_bundle(author_id=callback.from_user.id,
-                                  name=data["name"],
-                                  price=data["price"],
-                                  company=data["company"],
-                                  date_interview=data["date"],
-                                  direction=data["direction"],
-                                  assembly=data["assembly"],
-                                  )
+    daoBundle.create_bundle(author_id=callback.from_user.id,
+                            name=data["name"],
+                            price=data["price"],
+                            company=data["company"],
+                            date_interview=data["date"],
+                            direction=data["direction"],
+                            assembly=data["assembly"],
+                            )
     await state.clear()
+
 
 @router.callback_query(F.data == "delete")
 async def callback_query(callback: CallbackQuery, state: FSMContext):
@@ -222,9 +235,3 @@ async def withdraw_money(message: types.Message, state: FSMContext):
             f'(id {item.bundle_id}) - {item.name} - {item.price}₽\n'
             f'{item.direction} - {item.company} - {item.date_interview}\n'
             f'скачиваний - {item.bought_count} заработано - {item.earned}₽')
-    # user = daoUser.get_user(user_id=message.from_user.id)
-    # await message.answer(f'*{user.cash}₽* Вам удалось заработать на данный момент🤑', parse_mode=ParseMode.MARKDOWN_V2)
-    # if user.cash < 1000:
-    #     await message.answer(f'Вывести можно минимум 1000₽. Вам вывод пока что не доступен')
-    # else:
-    #     await message.answer(f'Для того что бы вывести деньги введите\n/get_money')
