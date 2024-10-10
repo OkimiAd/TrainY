@@ -18,7 +18,7 @@ async def open_bundle(message: types.Message, state: FSMContext):
     await state.set_state(CatalogFlow.choose_id_open)
     await message.answer("Для того что бы открыть напиши id интересующего тебя bundle", protect_content=True)
 
-@router.message(F.text == 'Доступные мне')
+@router.message(F.text == 'Мои покупки')
 async def on_catalog(message: types.Message, state: FSMContext):
     await state.clear()
 

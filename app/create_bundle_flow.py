@@ -41,7 +41,7 @@ async def for_authors(message: types.Message, state: FSMContext):
 async def withdraw_money(message: types.Message, state: FSMContext):
     user = daoUser.get_user(user_id=message.from_user.id)
     await message.answer(f'*{user.cash}₽* Вам удалось заработать на данный момент🤑', parse_mode=ParseMode.MARKDOWN_V2)
-    await message.answer(f'Комиссия платформы составляет 20% \+ 13% НДФЛ', parse_mode=ParseMode.MARKDOWN_V2)
+    await message.answer(f'Комиссия платформы составляет 30% \+ 13% НДФЛ', parse_mode=ParseMode.MARKDOWN_V2)
     if user.cash < 1000:
         await message.answer(f'Вывести можно минимум 1000₽. Вам вывод пока что не доступен')
     else:
@@ -65,7 +65,7 @@ async def withdraw_money(message: types.Message, state: FSMContext):
         await message.answer(f'Недостаточно средств. Введите еще раз')
         return
 
-    await message.answer(f'Итого к выводу {message.text}₽ - {int(float(message.text)/100*20)}₽ (комиссия 20%) - {int(float(message.text)/100*13)}₽ (НДФЛ 13%) = {int(float(message.text)/100*67)}₽')
+    await message.answer(f'Итого к выводу {message.text}₽ - {int(float(message.text)/100*30)}₽ (комиссия 30%) - {int(float(message.text)/100*13)}₽ (НДФЛ 13%) = {int(float(message.text)/100*67)}₽')
 
     await state.update_data(money=int(message.text))
     await state.set_state(GetMoney.get_transfer_data)

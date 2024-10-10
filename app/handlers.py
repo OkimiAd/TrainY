@@ -1,8 +1,9 @@
 from aiogram import types, Router, F
-from aiogram.enums import ParseMode
+from aiogram.enums import ParseMode, ContentType
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
+from aiogram.types import Message
 from aiogram.utils import markdown
 
 import app.data.database as db
@@ -148,9 +149,6 @@ async def filter_company(message: types.Message, state: FSMContext):
     await message.answer("Подписка успешно добавлена", protect_content=True, reply_markup=kb.main)
     await state.clear()
 
-
-@router.message()
-async def other(message: types.Message):
-    await message.answer("Не понимаю тебя😅", protect_content=True)
-    user = message.from_user
-    print(message.text + user.username)
+# @router.message()
+# async def other(message: types.Message):
+#     await message.answer("Не понимаю тебя😅", protect_content=True)

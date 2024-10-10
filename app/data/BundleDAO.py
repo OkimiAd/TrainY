@@ -121,7 +121,7 @@ def get_filtered_bundles(user_id: int, company: str, direction: str):
         for t in bundless:
             new_listt.append(
                 Bundle(bundle_id=t[0], created_date=t[1], author_id=t[2], name=t[3], price=t[4], company=t[5],
-                       date_interview=t[6], direction=t[7], assembling=t[8], bought_count=t[9], earned=t[10]))
+                       date_interview=t[6], direction=t[7], assembling=t[8], bought_count=t[10], earned=t[11]))
         return new_listt
 
 
