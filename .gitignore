@@ -3,3 +3,6 @@ database.db
 .idea/vcs.xml
 nohup.out
 telegram-bot-api/
+.idea/dataSources.local.xml
+.idea/dataSources/515bab48-c481-49a2-a5ac-4344a16d87a6.xml
+.idea/dataSources/515bab48-c481-49a2-a5ac-4344a16d87a6/storage_v2/_src_/schema/main.uQUzAA.meta
