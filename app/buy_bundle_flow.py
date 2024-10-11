@@ -1,11 +1,8 @@
 from aiogram import types, Router, F
-from aiogram.enums import ParseMode, ContentType
+from aiogram.enums import ParseMode
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import LabeledPrice, Message
-from aiohttp.web_fileresponse import content_type
-
-from app.data.entities import Bundle
 from app.handlers import CatalogFlow
 
 import app.keyboards as kb
@@ -82,7 +79,7 @@ async def date_bundle(message: types.Message, state: FSMContext):
 
     await bot.send_invoice(
         message.chat.id,
-        title="Покупка пака",
+        title="Пак собеседования",
         description=f'(id {bundle.bundle_id}) - {bundle.name} - {bundle.price}₽\n'
                     f'{bundle.direction} - {bundle.company} - {bundle.date_interview}',
         provider_token=PAYMENTS_TOKEN,
@@ -111,8 +108,3 @@ async def success_payment_handler(message: Message, state: FSMContext):
 @router.pre_checkout_query()
 async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
     await pre_checkout_query.answer(ok=True)
-
-# @router.pre_checkout_query()
-# async def process_pre_checkout_query(pre_checkout_query: types.PreCheckoutQuery):
-#     await bot.answer_pre_checkout_query(pre_checkout_query.id, ok=True)
-#     await message.answer("Bundle успешно куплен. Теперь ты его можешь найти в разделе \"Доступные мне\"")

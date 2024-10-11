@@ -65,7 +65,12 @@ async def withdraw_money(message: types.Message, state: FSMContext):
         await message.answer(f'Недостаточно средств. Введите еще раз')
         return
 
-    await message.answer(f'Итого к выводу {message.text}₽ - {int(float(message.text)/100*30)}₽ (комиссия 30%) - {int(float(message.text)/100*13)}₽ (НДФЛ 13%) = {int(float(message.text)/100*67)}₽')
+    commission = int(float(message.text) / 100 * 30)
+    ndfl = int((int(message.text) - commission) / 100 * 13)
+    for_author = int(message.text) - commission - ndfl
+
+    await message.answer(
+        f'Итого к выводу {message.text}₽ - {commission}₽ (комиссия 30%) - {ndfl}₽ (НДФЛ 13%) = {for_author}₽')
 
     await state.update_data(money=int(message.text))
     await state.set_state(GetMoney.get_transfer_data)
@@ -108,13 +113,13 @@ async def assembly_bundle(message: types.Message, state: FSMContext):
         if message.content_type is ContentType.TEXT:
             list_elements.append(message.text)
         elif message.content_type is ContentType.DOCUMENT:
-            list_elements.append(DocumentMess(message.document.file_id, type_doc="doc", caption= message.caption))
+            list_elements.append(DocumentMess(message.document.file_id, type_doc="doc", caption=message.caption))
         elif message.content_type is ContentType.AUDIO:
-            list_elements.append(DocumentMess(message.audio.file_id, type_doc="audio", caption= message.caption))
+            list_elements.append(DocumentMess(message.audio.file_id, type_doc="audio", caption=message.caption))
         elif message.content_type is ContentType.VIDEO:
-            list_elements.append(DocumentMess(message.video.file_id, type_doc="video", caption= message.caption))
+            list_elements.append(DocumentMess(message.video.file_id, type_doc="video", caption=message.caption))
         elif message.content_type is ContentType.PHOTO:
-            list_elements.append(DocumentMess(message.photo[0].file_id , type_doc="photo", caption= message.caption))
+            list_elements.append(DocumentMess(message.photo[0].file_id, type_doc="photo", caption=message.caption))
         else:
             await message.answer(
                 "Этот формат не поддерживается в бандле. Попробуйте отправить этот документ без сжатия")

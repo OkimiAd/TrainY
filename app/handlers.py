@@ -97,7 +97,7 @@ async def subscribe_search(message: types.Message, state: FSMContext):
 
     for sub in list_subs:
         await message.answer(
-            f'id *{sub[0]}* direction \- *{sub[3]}* company \- *{sub[2]}*',
+            f'id *{sub[0]}* \- *{sub[3]}* \- *{sub[2]}*',
             protect_content=True, parse_mode=ParseMode.MARKDOWN_V2)
 
 
@@ -149,6 +149,6 @@ async def filter_company(message: types.Message, state: FSMContext):
     await message.answer("Подписка успешно добавлена", protect_content=True, reply_markup=kb.main)
     await state.clear()
 
-# @router.message()
-# async def other(message: types.Message):
-#     await message.answer("Не понимаю тебя😅", protect_content=True)
+@router.message()
+async def other(message: types.Message):
+    await message.answer("Не понимаю тебя😅", protect_content=True)

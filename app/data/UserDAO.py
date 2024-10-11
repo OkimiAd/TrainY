@@ -17,10 +17,7 @@ def get_user(*, user_id) -> User:
     print("get_user_start")
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
-
         tup: tuple = cursor.execute(f'SELECT * FROM users WHERE id = {user_id}').fetchone()
-
-        print("get_user_end")
         return User(id=tup[0], date_added=tup[1], name=tup[2], cash=tup[3], commission=tup[4],
                     available_bundles=tup[5], )
 
