@@ -28,8 +28,8 @@ class Bundle:
     bought_count: int
     earned: int
 
-
-    def __init__(self, bundle_id, created_date, author_id, name, price, company, date_interview, direction, assembling,bought_count,earned):
+    def __init__(self, bundle_id, created_date, author_id, name, price, company, date_interview, direction, assembling,
+                 bought_count, earned):
         self.bundle_id = bundle_id
         self.created_date = created_date
         self.author_id = author_id
@@ -41,3 +41,22 @@ class Bundle:
         self.assembling = assembling
         self.bought_count = bought_count
         self.earned = earned
+
+
+class MoneyRequest:
+    id: int
+    user_id: int
+    for_author: int
+    commission: int
+    ndfl: int
+    request_date: str
+    created_date: str
+
+    def __init__(self, id, user_id, for_author, commission, ndfl, request_date, created_date):
+        self.id = id
+        self.user_id = user_id
+        self.for_author = for_author
+        self.commission = commission
+        self.ndfl = ndfl
+        self.request_date = request_date
+        self.created_date = created_date

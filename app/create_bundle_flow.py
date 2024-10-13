@@ -11,8 +11,11 @@ import app.keyboards as kb
 from app.handlers import DocumentMess
 import app.data.BundleDAO as daoBundle
 import app.data.UserDAO as daoUser
+import app.data.database as db
 
 router = Router()
+
+commission_const = 20
 
 
 class GetMoney(StatesGroup):
@@ -41,8 +44,11 @@ async def for_authors(message: types.Message, state: FSMContext):
 async def withdraw_money(message: types.Message, state: FSMContext):
     user = daoUser.get_user(user_id=message.from_user.id)
     await message.answer(f'*{user.cash}₽* Вам удалось заработать на данный момент🤑', parse_mode=ParseMode.MARKDOWN_V2)
-    await message.answer(f'Комиссия платформы составляет 30% \+ 13% НДФЛ', parse_mode=ParseMode.MARKDOWN_V2)
-    if user.cash < 1000:
+    await message.answer(f'Комиссия платформы составляет {commission_const}% \+ 13% НДФЛ', parse_mode=ParseMode.MARKDOWN_V2)
+    is_user_have_money_request = db.is_user_have_money_request(user_id=message.from_user.id)
+    if is_user_have_money_request:
+        await message.answer(f'У вас уже есть активная заявка на вывод средств. Подождите пока она обработается')
+    elif user.cash < 1000:
         await message.answer(f'Вывести можно минимум 1000₽. Вам вывод пока что не доступен')
     else:
         await message.answer(f'Для того что бы вывести деньги введите\n/get_money')
@@ -51,7 +57,11 @@ async def withdraw_money(message: types.Message, state: FSMContext):
 @router.message(Command('get_money'))
 async def withdraw_money(message: types.Message, state: FSMContext):
     user = daoUser.get_user(user_id=message.from_user.id)
-    if user.cash < 1000:
+    is_user_have_money_request = db.is_user_have_money_request(user_id=message.from_user.id)
+    if is_user_have_money_request:
+        await message.answer(f'У вас уже есть активная заявка на вывод средств. Подождите пока она обработается')
+        return
+    elif user.cash < 1000:
         await message.answer(f'Вывод не доступен, потому что у вас меньше минимальной суммы вывода')
         return
     await state.set_state(GetMoney.get_money)
@@ -65,22 +75,37 @@ async def withdraw_money(message: types.Message, state: FSMContext):
         await message.answer(f'Недостаточно средств. Введите еще раз')
         return
 
-    commission = int(float(message.text) / 100 * 30)
+    commission = int(float(message.text) / 100 * commission_const)
     ndfl = int((int(message.text) - commission) / 100 * 13)
     for_author = int(message.text) - commission - ndfl
 
     await message.answer(
-        f'Итого к выводу {message.text}₽ - {commission}₽ (комиссия 30%) - {ndfl}₽ (НДФЛ 13%) = {for_author}₽')
+        f'Итого к выводу {message.text}₽ - {commission}₽ (комиссия {commission_const}%) - {ndfl}₽ (НДФЛ 13%) = {for_author}₽')
 
-    await state.update_data(money=int(message.text))
+    await state.update_data(commission=commission)
+    await state.update_data(ndfl=ndfl)
+    await state.update_data(for_author=for_author)
+
     await state.set_state(GetMoney.get_transfer_data)
     await message.answer(
-        f'Введите номер телефона, имя и банк куда необходимо отправить перевод. Если информация будет некорректная заявка будет отклонена')
+        f'Введите:\n'
+        f' - номер телефона\n'
+        f' - имя\n'
+        f' - банк\n'
+        f'куда необходимо отправить перевод. Если информация будет некорректная заявка будет отклонена')
 
 
 @router.message(GetMoney.get_transfer_data)
 async def withdraw_money(message: types.Message, state: FSMContext):
+    if len(message.text) < 10:
+        await message.answer(f'Введите как минимум 10 символов')
+        return
+
     await message.answer(f'Заявка отправлена и будет обработана в течении 7 рабочих дней')
+    state_data = await state.get_data()
+    db.add_money_request(user_id=message.from_user.id, request_data=message.text, commission=state_data["commission"],
+                         ndfl=state_data["ndfl"], for_author=state_data["for_author"])
+    await state.clear()
 
 
 @router.message(F.text == 'Выложить запись')

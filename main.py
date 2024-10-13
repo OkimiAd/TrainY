@@ -11,7 +11,7 @@ from aiogram import types
 from app.buy_bundle_flow import router as buy_bundle_flow
 from app.create_bundle_flow import router as create_bl_router
 from app.open_bundle_flow import router as open_bl_router
-from app.admin_flow import router as admin_router
+from app.admin_flow import router as admin_router, AdminFlow
 from app.handlers import router as handler_router
 from my_bot import bot
 import app.keyboards as kb
@@ -40,6 +40,11 @@ async def on_start(message: types.Message, state: FSMContext):
 async def on_cancel(message: types.Message, state: FSMContext):
     await message.answer("Возвращение в начало чата", reply_markup=kb.main)
     await state.clear()
+
+@dp.message(Command('admin'))
+async def on_admin(message: types.Message, state: FSMContext):
+    await state.set_state(AdminFlow.password)
+    await message.answer("Введите пароль для входа в админку")
 
 
 async def main():

@@ -2,7 +2,7 @@ import json
 import sqlite3 as sq
 from datetime import datetime
 
-from app.data.UserDAO import credit_to_the_author
+from app.data.UserDAO import credit_to_the_user
 from app.data.entities import Bundle
 from my_bot import bot
 
@@ -99,7 +99,7 @@ def buy_bundle(*, user_id: int, bundle_id: int):
                        f'earned = "{bought_count_earned_price[1] + bought_count_earned_price[2]}" '
                        f' WHERE id = {bundle_id}')
     bundle = get_bundle(bundle_id=bundle_id)
-    credit_to_the_author(bundle.author_id, bundle.price)
+    credit_to_the_user(bundle.author_id, bundle.price)
 
 
 def get_filtered_bundles(user_id: int, company: str, direction: str):
@@ -125,7 +125,7 @@ def get_filtered_bundles(user_id: int, company: str, direction: str):
         return new_listt
 
 
-def get_not_moderated_bundle():
+def get_not_moderated_bundle() -> list[Bundle]:
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
         exe = f'SELECT * FROM bundles WHERE is_moderated = 0 ORDER BY id ASC'

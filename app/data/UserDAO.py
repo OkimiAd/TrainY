@@ -21,11 +21,11 @@ def get_user(*, user_id) -> User:
         return User(id=tup[0], date_added=tup[1], name=tup[2], cash=tup[3], commission=tup[4],
                     available_bundles=tup[5], )
 
-def credit_to_the_author(author_id: int, cash: int):
+def credit_to_the_user(*, user_id: int, cash: int):
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
-        original_cash: int = cursor.execute(f'SELECT cash FROM users WHERE id = {author_id}').fetchone()[0]
-        cursor.execute(f'UPDATE users SET cash = {original_cash + cash} WHERE id = {author_id}')
+        original_cash: int = cursor.execute(f'SELECT cash FROM users WHERE id = {user_id}').fetchone()[0]
+        cursor.execute(f'UPDATE users SET cash = {original_cash + cash} WHERE id = {user_id}')
 
 def is_user_have_bundle_access(user_id: int, bundle_id: int) -> bool:
     with sq.connect("database.db") as connection:
