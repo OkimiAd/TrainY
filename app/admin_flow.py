@@ -12,6 +12,7 @@ import app.data.UserDAO as daoUser
 
 router = Router()
 
+
 class AdminFlow(StatesGroup):
     password = State()
     in_admin = State()
@@ -20,13 +21,14 @@ class AdminFlow(StatesGroup):
     reject_bundle = State()
     reject_money_request = State()
 
+
 @router.message(AdminFlow.password)
 async def on_admin(message: types.Message, state: FSMContext):
     if message.text == "1234":
         await message.answer("Вы успешно вошли в админку")
 
         list_bundles = daoBundle.get_not_moderated_bundle()
-        list_money_requests = db.get_money_requests()
+        list_money_requests = db.get_active_money_requests()
 
         await message.answer(f'/moderate_bundle - для того что бы увидеть ожидающий бандл - {len(list_bundles)}\n'
                              f'/money_requests -  для того что бы увидеть заявки на вывод средств - {len(list_money_requests)}')
@@ -41,7 +43,7 @@ async def money_requests(message: types.Message, state: FSMContext):
         await message.answer(f'Доступ запрещен')
         return
 
-    list_money_requests = db.get_money_requests()
+    list_money_requests = db.get_active_money_requests()
     await message.answer(f'На рассмотрении - {len(list_money_requests)}')
 
     if len(list_money_requests) == 0:
@@ -114,12 +116,12 @@ async def on_admin(message: types.Message, state: FSMContext):
 
         state_data = await state.get_data()
 
-
-        total = state_data["money_requests"].for_author + state_data["money_requests"].commission +state_data["money_requests"].ndfl
+        total = state_data["money_requests"].for_author + state_data["money_requests"].commission + state_data[
+            "money_requests"].ndfl
 
         await bot.send_message(chat_id=state_data["money_requests"].user_id,
                                text=f'Ваш запрос на вывод денег id - {state_data["money_requests"].id} был принят.\n{state_data["money_requests"].for_author}₽')
-        db.delete_money_request(mr_id=state_data["money_requests"].id)
+        db.set_money_request_status(mr_id=state_data["money_requests"].id, status=2)
         daoUser.credit_to_the_user(user_id=state_data["money_requests"].user_id,
                                    cash=-total)
         await state.set_state(AdminFlow.in_admin)
@@ -171,7 +173,7 @@ async def on_admin(message: types.Message, state: FSMContext):
     await bot.send_message(chat_id=state_data["money_requests"].user_id,
                            text=f'Причина - {message.text}')
 
-    db.delete_money_request(mr_id=state_data["money_requests"].id)
+    db.set_money_request_status(mr_id=state_data["money_requests"].id, status=1)
 
     await state.set_state(AdminFlow.in_admin)
     await money_requests(message, state)

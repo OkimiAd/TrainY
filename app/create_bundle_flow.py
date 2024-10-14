@@ -45,7 +45,8 @@ async def for_authors(message: types.Message, state: FSMContext):
 async def withdraw_money(message: types.Message, state: FSMContext):
     user = daoUser.get_user(user_id=message.from_user.id)
     await message.answer(f'*{user.cash}₽* Вам удалось заработать на данный момент🤑', parse_mode=ParseMode.MARKDOWN_V2)
-    await message.answer(f'Комиссия платформы составляет {commission_const}% \+ 13% НДФЛ', parse_mode=ParseMode.MARKDOWN_V2)
+    await message.answer(f'Комиссия платформы составляет {commission_const}% \+ 13% НДФЛ',
+                         parse_mode=ParseMode.MARKDOWN_V2)
     is_user_have_money_request = db.is_user_have_money_request(user_id=message.from_user.id)
     if is_user_have_money_request:
         await message.answer(f'У вас уже есть активная заявка на вывод средств. Подождите пока она обработается')
@@ -74,6 +75,9 @@ async def withdraw_money(message: types.Message, state: FSMContext):
     user = daoUser.get_user(user_id=message.from_user.id)
     if int(message.text) > user.cash:
         await message.answer(f'Недостаточно средств. Введите еще раз')
+        return
+    elif int(message.text) < min_sum_withdrawal:
+        await message.answer(f'Можно вывести минимум {min_sum_withdrawal}')
         return
 
     commission = int(float(message.text) / 100 * commission_const)

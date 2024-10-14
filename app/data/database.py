@@ -84,10 +84,10 @@ def add_money_request(*, user_id: int, request_data: str, for_author: int, commi
             (user_id, request_data, for_author, commission, ndfl))
 
 
-def get_money_requests() -> list[MoneyRequest]:
+def get_active_money_requests() -> list[MoneyRequest]:
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
-        exe = f'SELECT * FROM money_requests ORDER BY created_date ASC'
+        exe = f'SELECT * FROM money_requests WHERE status = 0 ORDER BY created_date ASC'
         bundless: list[tuple] = cursor.execute(exe).fetchall()
         new_listt = []
 
@@ -101,16 +101,11 @@ def get_money_requests() -> list[MoneyRequest]:
 def is_user_have_money_request(*, user_id: int, ) -> bool:
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
-        id_money_req = cursor.execute(f'SELECT id FROM money_requests WHERE user_id = {user_id}').fetchone()
+        id_money_req = cursor.execute(f'SELECT id FROM money_requests WHERE user_id = {user_id} AND status = 0').fetchone()
         return id_money_req is not None
 
-# def delete_money_request(*, mr_id: int):
-#     with sq.connect("database.db") as connection:
-#         cursor = connection.cursor()
-#         return cursor.execute(f'DELETE FROM money_requests WHERE id = {mr_id}')
-
-def set_money_request_status(*, mr_id: int):
+# 0 - None, 1 - reject, 2 - approve
+def set_money_request_status(*, mr_id: int, status: int):
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
-        return cursor.execute(f'DELETE FROM money_requests WHERE id = {mr_id}')
-
+        cursor.execute(f'UPDATE money_requests SET status = "{status}" WHERE id = {mr_id}')
