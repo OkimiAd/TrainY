@@ -160,7 +160,7 @@ def get_available_bundles_for_user(user_id: int):
 def get_bundles_for_author(author_id: int) -> list[Bundle]:
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
-        bundles_list_tuple = cursor.execute(f'SELECT * FROM bundles WHERE author_id = {author_id}').fetchall()
+        bundles_list_tuple = cursor.execute(f'SELECT * FROM bundles WHERE author_id = {author_id} ORDER BY id DESC').fetchall()
         new_listt = []
         for t in bundles_list_tuple:
             new_listt.append(
