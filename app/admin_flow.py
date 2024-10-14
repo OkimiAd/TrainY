@@ -163,7 +163,10 @@ async def on_admin(message: types.Message, state: FSMContext):
     await message.answer(f'Отклонено')
     state_data = await state.get_data()
     await bot.send_message(chat_id=state_data["money_requests"].user_id,
-                           text=f'Ваш запрос на вывод денег id - {state_data["money_requests"].id} был отклонен.\n{state_data["money_requests"].created_date}\n{state_data["money_requests"].for_author}₽\n{state_data["money_requests"].request_date}')
+                           text=f'Ваш запрос на вывод денег id - {state_data["money_requests"].id} был отклонен.\n'
+                                f'Заяка создана {state_data["money_requests"].created_date}\n'
+                                f'{state_data["money_requests"].for_author + state_data["money_requests"].commission + state_data["money_requests"].ndfl}₽\n'
+                                f'{state_data["money_requests"].request_date}')
 
     await bot.send_message(chat_id=state_data["money_requests"].user_id,
                            text=f'Причина - {message.text}')

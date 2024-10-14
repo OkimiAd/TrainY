@@ -15,7 +15,8 @@ import app.data.database as db
 
 router = Router()
 
-commission_const = 20
+commission_const = 10
+min_sum_withdrawal = 5000
 
 
 class GetMoney(StatesGroup):
@@ -48,8 +49,8 @@ async def withdraw_money(message: types.Message, state: FSMContext):
     is_user_have_money_request = db.is_user_have_money_request(user_id=message.from_user.id)
     if is_user_have_money_request:
         await message.answer(f'У вас уже есть активная заявка на вывод средств. Подождите пока она обработается')
-    elif user.cash < 1000:
-        await message.answer(f'Вывести можно минимум 1000₽. Вам вывод пока что не доступен')
+    elif user.cash < min_sum_withdrawal:
+        await message.answer(f'Вывести можно минимум {min_sum_withdrawal}₽. Вам вывод пока что не доступен')
     else:
         await message.answer(f'Для того что бы вывести деньги введите\n/get_money')
 
@@ -61,7 +62,7 @@ async def withdraw_money(message: types.Message, state: FSMContext):
     if is_user_have_money_request:
         await message.answer(f'У вас уже есть активная заявка на вывод средств. Подождите пока она обработается')
         return
-    elif user.cash < 1000:
+    elif user.cash < min_sum_withdrawal:
         await message.answer(f'Вывод не доступен, потому что у вас меньше минимальной суммы вывода')
         return
     await state.set_state(GetMoney.get_money)
