@@ -44,7 +44,8 @@ def db_start():
                        "commission INTEGER,"
                        "ndfl INTEGER,"
                        "request_data TEXT,"
-                       "created_date TEXT DEFAULT CURRENT_TIMESTAMP"
+                       "created_date TEXT DEFAULT CURRENT_TIMESTAMP,"
+                       "status INTEGER DEFAULT 0"
                        ")"
                        )
 
@@ -103,7 +104,13 @@ def is_user_have_money_request(*, user_id: int, ) -> bool:
         id_money_req = cursor.execute(f'SELECT id FROM money_requests WHERE user_id = {user_id}').fetchone()
         return id_money_req is not None
 
-def delete_money_request(*, mr_id: int):
+# def delete_money_request(*, mr_id: int):
+#     with sq.connect("database.db") as connection:
+#         cursor = connection.cursor()
+#         return cursor.execute(f'DELETE FROM money_requests WHERE id = {mr_id}')
+
+def set_money_request_status(*, mr_id: int):
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
         return cursor.execute(f'DELETE FROM money_requests WHERE id = {mr_id}')
+
