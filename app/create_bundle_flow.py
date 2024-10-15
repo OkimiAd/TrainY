@@ -177,6 +177,11 @@ async def price_bundle(message: types.Message, state: FSMContext):
     except:
         await message.answer("Введите число")
         return
+
+    if int(message.text) == 0 or int(message.text) >= 50:
+        await message.answer("Должно быть больше 50")
+        return
+
     await state.update_data(price=message.text)
 
     await message.answer("Введи название компании(Англ)")

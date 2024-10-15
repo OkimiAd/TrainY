@@ -2,6 +2,10 @@ import json
 import sqlite3 as sq
 from datetime import datetime
 
+from googletrans import Translator
+
+# from translate import Translator
+
 from app.data.UserDAO import credit_to_the_user
 from app.data.entities import Bundle
 from my_bot import bot
@@ -16,7 +20,6 @@ def create_bundle(*, author_id: int, name: str, price: int, company: str, date_i
             'INSERT OR REPLACE INTO bundles (created_date, author_id, name, price, company, date_interview, direction, assembling) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
             (created_date, author_id, name, price, company, date_interview, direction,
              json.dumps(assembly, default=obj_dict)))
-
 
         original_list: str = cursor.execute(f'SELECT available_bundles FROM users WHERE id = {author_id}').fetchone()[
             0]
@@ -99,7 +102,7 @@ def buy_bundle(*, user_id: int, bundle_id: int):
                        f'earned = "{bought_count_earned_price[1] + bought_count_earned_price[2]}" '
                        f' WHERE id = {bundle_id}')
     bundle = get_bundle(bundle_id=bundle_id)
-    credit_to_the_user(bundle.author_id, bundle.price)
+    credit_to_the_user(user_id=bundle.author_id, cash=bundle.price)
 
 
 def get_filtered_bundles(user_id: int, company: str, direction: str):
@@ -112,7 +115,10 @@ def get_filtered_bundles(user_id: int, company: str, direction: str):
         if company == "Не важно":
             company_str = ""
         else:
-            company_str = f'AND company = "{company}" COLLATE NOCASE'
+            translator = Translator()
+            translation = translator.translate(company, 'en')
+            company_str = (f'AND company LIKE \'%{company}%\' COLLATE NOCASE OR'
+                           f' company LIKE \'%{translation.text}%\' COLLATE NOCASE')
 
         exe = f'SELECT * FROM bundles WHERE direction = "{direction}" COLLATE NOCASE {company_str} AND id NOT IN {s} AND is_moderated = 1 ORDER BY id DESC'
         bundless: list[tuple] = cursor.execute(exe).fetchmany(10)
@@ -142,11 +148,10 @@ def get_not_moderated_bundle() -> list[Bundle]:
 def get_available_bundles_for_user(user_id: int):
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
-        bundles_json: str = connection.execute(f'SELECT available_bundles FROM users WHERE id = {user_id}').fetchone()[
+        bundles_json: str = cursor.execute(f'SELECT available_bundles FROM users WHERE id = {user_id}').fetchone()[
             0]
         s = bundles_json.replace('[', '(').replace(']', ')')
-        bundless: list[tuple] = connection.execute(f'SELECT * FROM bundles WHERE id IN {s} ORDER BY id DESC').fetchmany(
-            10)
+        bundless: list[tuple] = cursor.execute(f'SELECT * FROM bundles WHERE id IN {s} ORDER BY id DESC').fetchall()
         new_listt = []
 
         for t in bundless:
@@ -160,7 +165,8 @@ def get_available_bundles_for_user(user_id: int):
 def get_bundles_for_author(author_id: int) -> list[Bundle]:
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
-        bundles_list_tuple = cursor.execute(f'SELECT * FROM bundles WHERE author_id = {author_id} ORDER BY id DESC').fetchall()
+        bundles_list_tuple = cursor.execute(
+            f'SELECT * FROM bundles WHERE author_id = {author_id} ORDER BY id DESC').fetchall()
         new_listt = []
         for t in bundles_list_tuple:
             new_listt.append(

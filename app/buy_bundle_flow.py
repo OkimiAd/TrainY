@@ -49,10 +49,12 @@ async def show_filtered_bundles(message: types.Message, state: FSMContext):
 
     await message.answer("Вот список", protect_content=True, reply_markup=kb.main)
 
+
     for item in list_bundles:
+        price_text = "Бесплатно" if item.price == 0 else str(item.price) + '₽'
         await message.answer(
-            f'(id {item.bundle_id}) - {item.name} - {item.price}₽\n'
-            f'{item.direction} - {item.company} - {item.date_interview} \n{item.bought_count} раз купили', )
+            f'<b>id {item.bundle_id}</b> - {item.name} - <b>{price_text}</b>\n'
+            f'{item.direction} - {item.company} - {item.date_interview} \n<b>{item.bought_count} раз купили</b>', )
     await message.answer("Для того что бы купить напиши /buy_bundle", protect_content=True)
 
 
@@ -74,13 +76,17 @@ async def date_bundle(message: types.Message, state: FSMContext):
     await state.clear()
     await state.update_data(bundle_id=int(message.text))
 
+    if bundle.price == 0:
+        await on_success(message, state)
+        return
+
     if PAYMENTS_TOKEN.split(':')[1] == 'TEST':
         await bot.send_message(message.chat.id, "Тестовый платеж")
 
     await bot.send_invoice(
         message.chat.id,
         title="Пак собеседования",
-        description=f'(id {bundle.bundle_id}) - {bundle.name} - {bundle.price}₽\n'
+        description=f'(id {bundle.bundle_id}) - {bundle.name} - <b>{bundle.price}₽</b>\n'
                     f'{bundle.direction} - {bundle.company} - {bundle.date_interview}',
         provider_token=PAYMENTS_TOKEN,
         currency='rub',
@@ -91,13 +97,16 @@ async def date_bundle(message: types.Message, state: FSMContext):
         is_flexible=False,  # True если конечная цена зависит от способа доставки
         prices=[LabeledPrice(amount=bundle.price * 100, label="Цена")],
         protect_content=True,
-        # start_parameter='time-machine-example',
         payload='payload'
     )
 
 
 @router.message(F.successful_payment)
 async def success_payment_handler(message: Message, state: FSMContext):
+    await on_success(message, state)
+
+@router.message(F.successful_payment)
+async def on_success(message: Message, state: FSMContext):
     await message.answer(text="🥳Спасибо за вашу поддержку!🤗")
     await message.answer(text="Теперь вы можете найти вашу покупку в разделе \"Мои покупки\"")
     state_data = await state.get_data()
