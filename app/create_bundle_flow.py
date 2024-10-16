@@ -178,7 +178,7 @@ async def price_bundle(message: types.Message, state: FSMContext):
         await message.answer("Введите число")
         return
 
-    if int(message.text) == 0 or int(message.text) >= 50:
+    if int(message.text) == 0 or int(message.text) <= 50:
         await message.answer("Должно быть больше 50")
         return
 
