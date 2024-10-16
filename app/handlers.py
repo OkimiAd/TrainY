@@ -117,7 +117,7 @@ async def subscribe_search(message: types.Message, state: FSMContext):
 
     for sub in list_subs:
         await message.answer(
-            f'id *{sub[0]}* \- *{sub[3]}* \- *{sub[2]}*',
+            f'id <b>{sub[0]}</b> - {sub[3]} - <b>{sub[2]}</b>',
             protect_content=True)
 
 

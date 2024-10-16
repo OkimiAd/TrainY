@@ -49,6 +49,7 @@ async def show_filtered_bundles(message: types.Message, state: FSMContext):
 
     await message.answer("Вот список", protect_content=True, reply_markup=kb.main)
 
+    # pip uninstall googletrans
 
     for item in list_bundles:
         price_text = "Бесплатно" if item.price == 0 else str(item.price) + '₽'

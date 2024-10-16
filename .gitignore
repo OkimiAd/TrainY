@@ -2,6 +2,7 @@
 database.db
 .idea/vcs.xml
 nohup.out
+config.py
 telegram-bot-api/
 .idea/dataSources.local.xml
 .idea/dataSources/515bab48-c481-49a2-a5ac-4344a16d87a6.xml
