@@ -35,6 +35,7 @@ class Bundle(StatesGroup):
 
 @router.message(F.text == 'Для авторов')
 async def for_authors(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     await message.answer(
         "Это раздел для для тех кто хочет выкладывать свои записи собеседований и зарабатывать на этом. "
         "Если ты прошел собеседовани, но тебе не дали офер, ты можешь заработать на том что подробная информация про вопросы на собесе сильно поможет следующим соискателям, "
@@ -43,6 +44,7 @@ async def for_authors(message: types.Message, state: FSMContext):
 
 @router.message(F.text == 'Вывести деньги')
 async def withdraw_money(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     user = daoUser.get_user(user_id=message.from_user.id)
     await message.answer(f'*{user.cash}₽* Вам удалось заработать на данный момент🤑', parse_mode=ParseMode.MARKDOWN_V2)
     await message.answer(f'Комиссия платформы составляет {commission_const}% \+ 13% НДФЛ',
@@ -58,6 +60,7 @@ async def withdraw_money(message: types.Message, state: FSMContext):
 
 @router.message(Command('get_money'))
 async def withdraw_money(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     user = daoUser.get_user(user_id=message.from_user.id)
     is_user_have_money_request = db.is_user_have_money_request(user_id=message.from_user.id)
     if is_user_have_money_request:
@@ -72,6 +75,7 @@ async def withdraw_money(message: types.Message, state: FSMContext):
 
 @router.message(GetMoney.get_money)
 async def withdraw_money(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     user = daoUser.get_user(user_id=message.from_user.id)
     if int(message.text) > user.cash:
         await message.answer(f'Недостаточно средств. Введите еще раз')
@@ -102,6 +106,7 @@ async def withdraw_money(message: types.Message, state: FSMContext):
 
 @router.message(GetMoney.get_transfer_data)
 async def withdraw_money(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     if len(message.text) < 10:
         await message.answer(f'Введите как минимум 10 символов')
         return
@@ -115,6 +120,7 @@ async def withdraw_money(message: types.Message, state: FSMContext):
 
 @router.message(F.text == 'Выложить запись')
 async def create_bundle(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     await state.clear()
     await message.answer(
         "Записи распространяются в виде бандлов. \n"
@@ -129,6 +135,7 @@ async def create_bundle(message: types.Message, state: FSMContext):
 
 @router.message(Bundle.assembly)
 async def assembly_bundle(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     data = await state.get_data()
     list_elements = data.get("assembly", [])
 
@@ -158,6 +165,7 @@ async def assembly_bundle(message: types.Message, state: FSMContext):
 
 @router.message(Bundle.name)
 async def name_bundle(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     if len(message.text) < 5:
         await message.answer(f'Минимум 5 символов. Сейчас {len(message.text)}')
         return
@@ -172,6 +180,7 @@ async def name_bundle(message: types.Message, state: FSMContext):
 
 @router.message(Bundle.price)
 async def price_bundle(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     try:
         int(message.text)
     except:
@@ -190,6 +199,7 @@ async def price_bundle(message: types.Message, state: FSMContext):
 
 @router.message(Bundle.company)
 async def company_name_bundle(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     if len(message.text) < 2:
         await message.answer(f'Минимум 2 символов. Сейчас {len(message.text)}')
         return
@@ -204,6 +214,7 @@ async def company_name_bundle(message: types.Message, state: FSMContext):
 
 @router.message(Bundle.date_interview)
 async def date_bundle(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     try:
         time.strptime(message.text, '%d.%m.%Y')
     except:
@@ -217,6 +228,7 @@ async def date_bundle(message: types.Message, state: FSMContext):
 
 @router.message(Bundle.direction)
 async def grade_bundle(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     await state.update_data(direction=message.text)
     await message.answer(f'Данные записаны и вот так они будут выглядеть для покупателя')
     data = await state.get_data()
@@ -240,6 +252,7 @@ async def grade_bundle(message: types.Message, state: FSMContext):
 
 @router.callback_query(F.data == "moderate")
 async def callback_query(callback: CallbackQuery, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     if await state.get_state() != str(Bundle.direction.state):
         print("canceled")
         return
@@ -262,12 +275,14 @@ async def callback_query(callback: CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data == "delete")
 async def callback_query(callback: CallbackQuery, state: FSMContext):
+    daoUser.update_last_action(callback.from_user.id)
     await callback.message.answer("Возвращение в начало чата", reply_markup=kb.main)
     await state.clear()
 
 
 @router.message(F.text == 'Мои записи')
-async def withdraw_money(message: types.Message, state: FSMContext):
+async def withdraw_money(message: types.Message):
+    daoUser.update_last_action(message.from_user.id)
     list_bundles = daoBundle.get_bundles_for_author(message.from_user.id)
     for item in list_bundles:
         await message.answer(

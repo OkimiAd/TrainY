@@ -10,6 +10,7 @@ import app.data.BundleDAO as daoBundle
 from config import PAYMENTS_TOKEN
 from my_bot import bot
 
+import app.data.UserDAO as daoUser
 from aiogram.types import PreCheckoutQuery
 
 router = Router()
@@ -17,6 +18,7 @@ router = Router()
 
 @router.message(F.text == 'Каталог интервью')
 async def on_catalog(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     await state.clear()
     await message.answer("Какое направление программирования вас интересует", protect_content=True,
                          reply_markup=kb.directions)
@@ -25,6 +27,7 @@ async def on_catalog(message: types.Message, state: FSMContext):
 
 @router.message(CatalogFlow.filter_direction)
 async def filter_direction(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     await state.update_data(direction=message.text)
     await state.set_state(CatalogFlow.filter_company)
     await message.answer("Какая компания вас интересует?(Англ)", protect_content=True, reply_markup=kb.doesnt_matter)
@@ -32,12 +35,14 @@ async def filter_direction(message: types.Message, state: FSMContext):
 
 @router.message(CatalogFlow.filter_company)
 async def filter_company(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     await state.update_data(company=message.text)
     await state.set_state(CatalogFlow.filter_company)
     await show_filtered_bundles(message, state)
 
 
 async def show_filtered_bundles(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     state_data = await state.get_data()
     list_bundles = daoBundle.get_filtered_bundles(message.from_user.id, company=state_data["company"],
                                                   direction=state_data["direction"])
@@ -61,6 +66,7 @@ async def show_filtered_bundles(message: types.Message, state: FSMContext):
 
 @router.message(Command('buy_bundle'))
 async def buy_bundle(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     await state.clear()
     await message.answer("Напиши id интересующего тебя bundle", protect_content=True)
     await state.set_state(CatalogFlow.choose_id_buy)
@@ -68,6 +74,7 @@ async def buy_bundle(message: types.Message, state: FSMContext):
 
 @router.message(CatalogFlow.choose_id_buy)
 async def date_bundle(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     try:
         int(message.text)
     except:
@@ -104,10 +111,12 @@ async def date_bundle(message: types.Message, state: FSMContext):
 
 @router.message(F.successful_payment)
 async def success_payment_handler(message: Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     await on_success(message, state)
 
 @router.message(F.successful_payment)
 async def on_success(message: Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     await message.answer(text="🥳Спасибо за вашу поддержку!🤗")
     await message.answer(text="Теперь вы можете найти вашу покупку в разделе \"Мои покупки\"")
     state_data = await state.get_data()
@@ -117,4 +126,5 @@ async def on_success(message: Message, state: FSMContext):
 
 @router.pre_checkout_query()
 async def pre_checkout_handler(pre_checkout_query: PreCheckoutQuery):
+    daoUser.update_last_action(pre_checkout_query.from_user.id)
     await pre_checkout_query.answer(ok=True)

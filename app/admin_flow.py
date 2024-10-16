@@ -22,9 +22,12 @@ class AdminFlow(StatesGroup):
     reject_money_request = State()
 
 
-@router.message(AdminFlow.password)
+@router.message(Command('admin'))
 async def on_admin(message: types.Message, state: FSMContext):
-    if message.text == "1234":
+    daoUser.update_last_action(message.from_user.id)
+    await state.set_state(AdminFlow.password)
+    user = daoUser.get_user(user_id=message.from_user.id)
+    if user.job_title == "Admin":
         await message.answer("Вы успешно вошли в админку")
 
         list_bundles = daoBundle.get_not_moderated_bundle()
@@ -34,8 +37,7 @@ async def on_admin(message: types.Message, state: FSMContext):
                              f'/money_requests -  для того что бы увидеть заявки на вывод средств - {len(list_money_requests)}')
         await state.set_state(AdminFlow.in_admin)
     else:
-        await message.answer("Не верный пароль")
-
+        await message.answer("Нет доступа")
 
 @router.message(Command('money_requests'))
 async def money_requests(message: types.Message, state: FSMContext):

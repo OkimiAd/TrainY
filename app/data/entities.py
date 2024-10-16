@@ -5,14 +5,18 @@ class User:
     cash: int
     commission: int
     available_bundles: str
+    job_title: str
+    last_action: str
 
-    def __init__(self, id, date_added, name, cash, commission, available_bundles):
+    def __init__(self, id, date_added, name, cash, commission, available_bundles,job_title,last_action):
         self.id = id
         self.date_added = date_added
         self.name = name
         self.cash = cash
         self.commission = commission
         self.available_bundles = available_bundles
+        self.job_title = job_title
+        self.last_action = last_action
 
 
 class Bundle:

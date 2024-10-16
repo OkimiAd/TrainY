@@ -4,8 +4,6 @@ from datetime import datetime
 
 from googletrans import Translator
 
-# from translate import Translator
-
 from app.data.UserDAO import credit_to_the_user
 from app.data.entities import Bundle
 from my_bot import bot

@@ -13,19 +13,22 @@ def add_user(user_id: int, name: str):
                        (user_id, time, name))
         connection.commit()
 
+
 def get_user(*, user_id) -> User:
     print("get_user_start")
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
         tup: tuple = cursor.execute(f'SELECT * FROM users WHERE id = {user_id}').fetchone()
         return User(id=tup[0], date_added=tup[1], name=tup[2], cash=tup[3], commission=tup[4],
-                    available_bundles=tup[5], )
+                    available_bundles=tup[5], job_title=tup[6], last_action=tup[7])
+
 
 def credit_to_the_user(*, user_id: int, cash: int):
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
         original_cash: int = cursor.execute(f'SELECT cash FROM users WHERE id = {user_id}').fetchone()[0]
         cursor.execute(f'UPDATE users SET cash = {original_cash + cash} WHERE id = {user_id}')
+
 
 def is_user_have_bundle_access(user_id: int, bundle_id: int) -> bool:
     with sq.connect("database.db") as connection:
@@ -34,3 +37,10 @@ def is_user_have_bundle_access(user_id: int, bundle_id: int) -> bool:
             0]
         bundle_id_list: list = json.loads(bundles_json)
         return bundle_id_list.__contains__(bundle_id)
+
+
+def update_last_action(user_id: int):
+    with sq.connect("database.db") as connection:
+        cursor = connection.cursor()
+        time = str(datetime.now())
+        cursor.execute(f'UPDATE users SET last_action = \'{time}\' WHERE id = {user_id}')

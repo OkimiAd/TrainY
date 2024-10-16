@@ -19,9 +19,9 @@ import app.data.UserDAO as daoUser
 
 dp = Dispatcher()
 
-
 @dp.message(CommandStart())
 async def on_start(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     user = message.from_user
     await message.answer_sticker("CAACAgIAAxkBAAEM6o9m_xXrhAqbSSVi3qlJF-avCUEN0AACSB0AAuIkgEot-Nk2wyVajjYE")
     await message.answer("Привет " + user.first_name)
@@ -31,21 +31,14 @@ async def on_start(message: types.Message, state: FSMContext):
         reply_markup=kb.main)
     await message.answer("v0.4")
 
-
     daoUser.add_user(user.id, user.username)
     await state.clear()
 
-
 @dp.message(Command('cancel'))
 async def on_cancel(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
     await message.answer("Возвращение в начало чата", reply_markup=kb.main)
     await state.clear()
-
-@dp.message(Command('admin'))
-async def on_admin(message: types.Message, state: FSMContext):
-    await state.set_state(AdminFlow.password)
-    await message.answer("Введите пароль для входа в админку")
-
 
 async def main():
     app.data.database.db_start()
@@ -53,7 +46,6 @@ async def main():
     dp.include_routers(create_bl_router, buy_bundle_flow, open_bl_router, admin_router, handler_router)
     await dp.start_polling(bot)
     print("start_polling")
-
 
 
 if __name__ == '__main__':
