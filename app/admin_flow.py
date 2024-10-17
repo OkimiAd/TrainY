@@ -156,7 +156,7 @@ async def on_admin(message: types.Message, state: FSMContext):
     await bot.send_message(chat_id=state_data["bundle"].author_id,
                            text=f'Причина - {message.text}')
 
-    daoBundle.delete_bundle(bundle_id=state_data["bundle"].bundle_id)
+    daoBundle.reject_bundle(bundle_id=state_data["bundle"].bundle_id)
 
     await state.set_state(AdminFlow.in_admin)
     await moderate_bundle(message, state)

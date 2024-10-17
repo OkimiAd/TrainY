@@ -29,16 +29,17 @@ def create_bundle(*, author_id: int, name: str, price: int, company: str, date_i
         cursor.execute(f'UPDATE users SET available_bundles = "{jsonnn}" WHERE id = {author_id}')
 
 
-def delete_bundle(*, bundle_id: int):
+def reject_bundle(*, bundle_id: int):
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
-        cursor.execute(f'DElETE FROM bundles WHERE id = "{bundle_id}"')
+        cursor.execute(f'UPDATE bundles SET is_moderated = "rejected" WHERE id = "{bundle_id}"')
+        # cursor.execute(f'DElETE FROM bundles WHERE id = "{bundle_id}"')
 
 
 async def approve_bundle(*, bundle_id: int):
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
-        cursor.execute(f'UPDATE bundles SET is_moderated = "1" WHERE id = "{bundle_id}"')
+        cursor.execute(f'UPDATE bundles SET is_moderated = "approved" WHERE id = "{bundle_id}"')
 
         await initiate_mailing(bundle_id=bundle_id)
 
@@ -118,7 +119,7 @@ def get_filtered_bundles(user_id: int, company: str, direction: str):
             company_str = (f'AND company LIKE \'%{company}%\' COLLATE NOCASE OR'
                            f' company LIKE \'%{translation.text}%\' COLLATE NOCASE')
 
-        exe = f'SELECT * FROM bundles WHERE direction = "{direction}" COLLATE NOCASE {company_str} AND id NOT IN {s} AND is_moderated = 1 ORDER BY id DESC'
+        exe = f'SELECT * FROM bundles WHERE direction = "{direction}" COLLATE NOCASE {company_str} AND id NOT IN {s} AND is_moderated = "approved" ORDER BY id DESC'
         bundless: list[tuple] = cursor.execute(exe).fetchmany(10)
         new_listt = []
 
@@ -132,7 +133,7 @@ def get_filtered_bundles(user_id: int, company: str, direction: str):
 def get_not_moderated_bundle() -> list[Bundle]:
     with sq.connect("database.db") as connection:
         cursor = connection.cursor()
-        exe = f'SELECT * FROM bundles WHERE is_moderated = 0 ORDER BY id ASC'
+        exe = f'SELECT * FROM bundles WHERE is_moderated = "new" ORDER BY id ASC'
         bundless: list[tuple] = cursor.execute(exe).fetchall()
         new_listt = []
 
