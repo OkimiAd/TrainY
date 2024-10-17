@@ -252,7 +252,7 @@ async def grade_bundle(message: types.Message, state: FSMContext):
 
 @router.callback_query(F.data == "moderate")
 async def callback_query(callback: CallbackQuery, state: FSMContext):
-    daoUser.update_last_action(message.from_user.id)
+    daoUser.update_last_action(callback.from_user.id)
     if await state.get_state() != str(Bundle.direction.state):
         print("canceled")
         return
