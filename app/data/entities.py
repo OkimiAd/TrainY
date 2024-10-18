@@ -8,7 +8,7 @@ class User:
     job_title: str
     last_action: str
 
-    def __init__(self, id, date_added, name, cash, commission, available_bundles,job_title,last_action):
+    def __init__(self, id, date_added, name, cash, commission, available_bundles, job_title, last_action):
         self.id = id
         self.date_added = date_added
         self.name = name
@@ -31,9 +31,10 @@ class Bundle:
     assembling: list
     bought_count: int
     earned: int
+    type: str
 
     def __init__(self, bundle_id, created_date, author_id, name, price, company, date_interview, direction, assembling,
-                 bought_count, earned):
+                 bought_count, earned, type):
         self.bundle_id = bundle_id
         self.created_date = created_date
         self.author_id = author_id
@@ -45,6 +46,12 @@ class Bundle:
         self.assembling = assembling
         self.bought_count = bought_count
         self.earned = earned
+        self.type = type
+
+
+def parse_bundle(t: tuple) -> Bundle:
+    return Bundle(bundle_id=t[0], created_date=t[1], author_id=t[2], name=t[3], price=t[4], company=t[5],
+                  date_interview=t[6], direction=t[7], assembling=t[8], bought_count=t[10], earned=t[11], type=t[12])
 
 
 class MoneyRequest:

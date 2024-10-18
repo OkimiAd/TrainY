@@ -29,7 +29,7 @@ async def on_start(message: types.Message, state: FSMContext):
         "Это бот TrainY! Тут ты можешь найти свежие записи собеседований в любую компанию на любую должность.\n"
         "Для начала можешь перейти в каталог интервью.☺️",
         reply_markup=kb.main)
-    await message.answer("v0.6")
+    await message.answer("v0.7")
 
     daoUser.add_user(user.id, user.username)
     await state.clear()

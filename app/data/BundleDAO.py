@@ -5,7 +5,7 @@ from datetime import datetime
 from googletrans import Translator
 
 from app.data.UserDAO import credit_to_the_user
-from app.data.entities import Bundle
+from app.data.entities import Bundle, parse_bundle
 from my_bot import bot
 
 
@@ -76,9 +76,7 @@ def get_bundle(*, bundle_id) -> Bundle:
 
         tup: tuple = cursor.execute(f'SELECT * FROM bundles WHERE id = {bundle_id}').fetchone()
 
-        bundle = Bundle(bundle_id=tup[0], created_date=tup[1], author_id=tup[2], name=tup[3], price=tup[4],
-                        company=tup[5],
-                        date_interview=tup[6], direction=tup[7], assembling=tup[8], bought_count=tup[9], earned=tup[10])
+        bundle = parse_bundle(tup)
         return bundle
 
 
@@ -124,9 +122,7 @@ def get_filtered_bundles(user_id: int, company: str, direction: str):
         new_listt = []
 
         for t in bundless:
-            new_listt.append(
-                Bundle(bundle_id=t[0], created_date=t[1], author_id=t[2], name=t[3], price=t[4], company=t[5],
-                       date_interview=t[6], direction=t[7], assembling=t[8], bought_count=t[10], earned=t[11]))
+            new_listt.append(parse_bundle(t))
         return new_listt
 
 
@@ -138,9 +134,7 @@ def get_not_moderated_bundle() -> list[Bundle]:
         new_listt = []
 
         for t in bundless:
-            new_listt.append(
-                Bundle(bundle_id=t[0], created_date=t[1], author_id=t[2], name=t[3], price=t[4], company=t[5],
-                       date_interview=t[6], direction=t[7], assembling=t[8], bought_count=t[9], earned=t[10]))
+            new_listt.append(parse_bundle(t))
         return new_listt
 
 
@@ -154,9 +148,7 @@ def get_available_bundles_for_user(user_id: int):
         new_listt = []
 
         for t in bundless:
-            new_listt.append(
-                Bundle(bundle_id=t[0], created_date=t[1], author_id=t[2], name=t[3], price=t[4], company=t[5],
-                       date_interview=t[6], direction=t[7], assembling=t[8], bought_count=t[9], earned=t[10]))
+            new_listt.append(parse_bundle(t))
 
         return new_listt
 
@@ -168,9 +160,7 @@ def get_bundles_for_author(author_id: int) -> list[Bundle]:
             f'SELECT * FROM bundles WHERE author_id = {author_id} ORDER BY id DESC').fetchall()
         new_listt = []
         for t in bundles_list_tuple:
-            new_listt.append(
-                Bundle(bundle_id=t[0], created_date=t[1], author_id=t[2], name=t[3], price=t[4], company=t[5],
-                       date_interview=t[6], direction=t[7], assembling=t[8], bought_count=t[10], earned=t[11]))
+            new_listt.append(parse_bundle(t))
 
         return new_listt
 
