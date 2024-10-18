@@ -30,6 +30,7 @@ class Bundle(StatesGroup):
     price = State()
     company = State()
     date_interview = State()
+    type = State()
     direction = State()
 
 
@@ -222,6 +223,17 @@ async def date_bundle(message: types.Message, state: FSMContext):
         return
 
     await state.update_data(date=message.text)
+    await state.set_state(Bundle.type)
+    await message.answer("Какой тип собеседования? (Скрининг, техническое, знакомство с командой)", reply_markup=kb.type_interview)
+
+@router.message(Bundle.type)
+async def date_bundle(message: types.Message, state: FSMContext):
+    daoUser.update_last_action(message.from_user.id)
+    if len(message.text) < 3:
+        await message.answer("Введите тип собеседования", reply_markup=kb.type_interview)
+        return
+
+    await state.update_data(type=message.text)
     await state.set_state(Bundle.direction)
     await message.answer("Какое направление? BackEnd, FrontEnd и другие", reply_markup=kb.directions)
 

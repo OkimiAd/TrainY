@@ -54,13 +54,12 @@ async def show_filtered_bundles(message: types.Message, state: FSMContext):
 
     await message.answer("Вот список", protect_content=True, reply_markup=kb.main)
 
-    # pip uninstall googletrans
-
     for item in list_bundles:
         price_text = "Бесплатно" if item.price == 0 else str(item.price) + '₽'
         await message.answer(
-            f'<b>id {item.bundle_id}</b> - {item.name} - <b>{price_text}</b>\n'
-            f'{item.direction} - {item.company} - {item.date_interview} \n<b>{item.bought_count} раз купили</b>', )
+            f'<b>id {item.bundle_id}</b> - {item.name} :: {item.date_interview}\n'
+            f'<u>{item.type}</u> {item.direction} в <u>{item.company}</u> \n'
+            f'Цена - <b>{price_text} || {item.bought_count} раз купили</b>', )
     await message.answer("Для того что бы купить напиши /buy_bundle", protect_content=True)
 
 

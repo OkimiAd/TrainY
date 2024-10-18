@@ -14,12 +14,24 @@ doesnt_matter = ReplyKeyboardMarkup(resize_keyboard=True,
                                     ]
                                     )
 
+type_interview = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True,
+                                     keyboard=[
+                                         [KeyboardButton(text="Техничка")],
+                                         [KeyboardButton(text="Алгоритмическое"), KeyboardButton(text="Систем дизайн")],
+                                         [KeyboardButton(text="Скрининг"), KeyboardButton(text="Знакомство с командой")],
+                                     ]
+                                     )
+
 directions = ReplyKeyboardMarkup(resize_keyboard=True, one_time_keyboard=True,
                                  keyboard=[
-                                     [KeyboardButton(text="Android"), KeyboardButton(text="IOS"), KeyboardButton(text="Flutter")],
-                                     [KeyboardButton(text="Front-end"), KeyboardButton(text="Back-end"), KeyboardButton(text="Devops")],
-                                     [KeyboardButton(text="QA"), KeyboardButton(text="Design"), KeyboardButton(text="GameDev")],
-                                     [KeyboardButton(text="System Analytics"), KeyboardButton(text="Product Manager"), KeyboardButton(text="Ml+DS")],
+                                     [KeyboardButton(text="Android"), KeyboardButton(text="IOS"),
+                                      KeyboardButton(text="Flutter")],
+                                     [KeyboardButton(text="Front-end"), KeyboardButton(text="Back-end"),
+                                      KeyboardButton(text="Devops")],
+                                     [KeyboardButton(text="QA"), KeyboardButton(text="Design"),
+                                      KeyboardButton(text="GameDev")],
+                                     [KeyboardButton(text="System Analytics"), KeyboardButton(text="Product Manager"),
+                                      KeyboardButton(text="Ml+DS")],
                                  ]
                                  )
 
@@ -31,11 +43,11 @@ subscribes = ReplyKeyboardMarkup(resize_keyboard=True,
                                  )
 
 for_authors = ReplyKeyboardMarkup(resize_keyboard=True,
-                                 keyboard=[
-                                     [KeyboardButton(text="Выложить запись")],
-                                     [KeyboardButton(text="Вывести деньги"), KeyboardButton(text="Мои записи")]
-                                 ]
-                                 )
+                                  keyboard=[
+                                      [KeyboardButton(text="Выложить запись")],
+                                      [KeyboardButton(text="Вывести деньги"), KeyboardButton(text="Мои записи")]
+                                  ]
+                                  )
 
 create_bundle = InlineKeyboardMarkup(
     inline_keyboard=[[InlineKeyboardButton(text="Отправить на модерацию", callback_data="moderate"),
