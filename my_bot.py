@@ -4,4 +4,4 @@ from aiogram.enums import ParseMode
 
 import config
 
-bot = Bot(token=config.TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+bot = Bot(token=config.TEST_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
